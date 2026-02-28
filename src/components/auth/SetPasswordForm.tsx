@@ -15,9 +15,16 @@ import {
 } from '@/components/ui/form'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 
-/** Schema de validación: mínimo 8 caracteres y coincidencia de contraseñas */
+/** Schema de validación: datos de perfil + contraseñas */
 const setPasswordSchema = z
   .object({
+    nombre: z.string().min(1, { message: 'Ingresa tu nombre completo' }),
+    telefono: z
+      .string()
+      .min(7, { message: 'Ingresa un teléfono válido' })
+      .regex(/^[+\d\s\-()]+$/, { message: 'Solo se permiten números, +, -, espacios y paréntesis' }),
+    cargo: z.string().min(1, { message: 'Ingresa tu cargo' }),
+    empresa: z.string().min(1, { message: 'Ingresa el nombre de tu empresa' }),
     password: z.string().min(8, { message: 'La contraseña debe tener al menos 8 caracteres' }),
     confirmPassword: z.string().min(1, { message: 'Confirma tu contraseña' }),
   })
@@ -43,7 +50,7 @@ interface SetPasswordFormProps {
 export function SetPasswordForm({ onSubmit, isLoading = false }: SetPasswordFormProps) {
   const form = useForm<SetPasswordFormData>({
     resolver: zodResolver(setPasswordSchema),
-    defaultValues: { password: '', confirmPassword: '' },
+    defaultValues: { nombre: '', telefono: '', cargo: '', empresa: '', password: '', confirmPassword: '' },
   })
 
   return (
@@ -57,6 +64,90 @@ export function SetPasswordForm({ onSubmit, isLoading = false }: SetPasswordForm
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
+            {/* Nombre completo */}
+            <FormField
+              control={form.control}
+              name="nombre"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nombre completo</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="text"
+                      placeholder="Juan Pérez"
+                      autoComplete="name"
+                      disabled={isLoading}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Teléfono */}
+            <FormField
+              control={form.control}
+              name="telefono"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Teléfono</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="tel"
+                      placeholder="+57 300 000 0000"
+                      autoComplete="tel"
+                      disabled={isLoading}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Cargo */}
+            <FormField
+              control={form.control}
+              name="cargo"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Cargo</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="text"
+                      placeholder="Analista de QA"
+                      autoComplete="organization-title"
+                      disabled={isLoading}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Empresa */}
+            <FormField
+              control={form.control}
+              name="empresa"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Empresa</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="text"
+                      placeholder="Nombre de tu empresa"
+                      autoComplete="organization"
+                      disabled={isLoading}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             {/* Nueva contraseña */}
             <FormField
               control={form.control}

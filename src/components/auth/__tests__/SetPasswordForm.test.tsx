@@ -9,6 +9,10 @@ describe('SetPasswordForm', () => {
   it('renderiza los campos de nueva contraseña y confirmación', () => {
     render(<SetPasswordForm onSubmit={noop} />)
 
+    expect(screen.getByLabelText(/nombre completo/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/teléfono/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/cargo/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/empresa/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/nueva contraseña/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/confirmar contraseña/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /activar cuenta/i })).toBeInTheDocument()
@@ -18,6 +22,10 @@ describe('SetPasswordForm', () => {
     const user = userEvent.setup()
     render(<SetPasswordForm onSubmit={noop} />)
 
+    await user.type(screen.getByLabelText(/nombre completo/i), 'Juan Pérez')
+    await user.type(screen.getByLabelText(/teléfono/i), '+57 300 000 0000')
+    await user.type(screen.getByLabelText(/cargo/i), 'Analista')
+    await user.type(screen.getByLabelText(/empresa/i), 'Empresa S.A.')
     await user.type(screen.getByLabelText(/nueva contraseña/i), '1234567')
     await user.type(screen.getByLabelText(/confirmar contraseña/i), '1234567')
     await user.click(screen.getByRole('button', { name: /activar cuenta/i }))
@@ -30,11 +38,25 @@ describe('SetPasswordForm', () => {
     const user = userEvent.setup()
     render(<SetPasswordForm onSubmit={noop} />)
 
+    await user.type(screen.getByLabelText(/nombre completo/i), 'Juan Pérez')
+    await user.type(screen.getByLabelText(/teléfono/i), '+57 300 000 0000')
+    await user.type(screen.getByLabelText(/cargo/i), 'Analista')
+    await user.type(screen.getByLabelText(/empresa/i), 'Empresa S.A.')
     await user.type(screen.getByLabelText(/nueva contraseña/i), 'password123')
     await user.type(screen.getByLabelText(/confirmar contraseña/i), 'diferente456')
     await user.click(screen.getByRole('button', { name: /activar cuenta/i }))
 
     expect(await screen.findByText(/las contraseñas no coinciden/i)).toBeInTheDocument()
+    expect(noop).not.toHaveBeenCalled()
+  })
+
+  it('muestra errores si los campos de perfil están vacíos', async () => {
+    const user = userEvent.setup()
+    render(<SetPasswordForm onSubmit={noop} />)
+
+    await user.click(screen.getByRole('button', { name: /activar cuenta/i }))
+
+    expect(await screen.findByText(/ingresa tu nombre completo/i)).toBeInTheDocument()
     expect(noop).not.toHaveBeenCalled()
   })
 
@@ -49,12 +71,23 @@ describe('SetPasswordForm', () => {
     const handleSubmit = vi.fn().mockResolvedValue(undefined)
     render(<SetPasswordForm onSubmit={handleSubmit} />)
 
+    await user.type(screen.getByLabelText(/nombre completo/i), 'Juan Pérez')
+    await user.type(screen.getByLabelText(/teléfono/i), '+57 300 000 0000')
+    await user.type(screen.getByLabelText(/cargo/i), 'Analista')
+    await user.type(screen.getByLabelText(/empresa/i), 'Empresa S.A.')
     await user.type(screen.getByLabelText(/nueva contraseña/i), 'password123')
     await user.type(screen.getByLabelText(/confirmar contraseña/i), 'password123')
     await user.click(screen.getByRole('button', { name: /activar cuenta/i }))
 
     expect(handleSubmit).toHaveBeenCalledWith(
-      { password: 'password123', confirmPassword: 'password123' },
+      {
+        nombre: 'Juan Pérez',
+        telefono: '+57 300 000 0000',
+        cargo: 'Analista',
+        empresa: 'Empresa S.A.',
+        password: 'password123',
+        confirmPassword: 'password123',
+      },
       expect.anything(),
     )
   })

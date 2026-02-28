@@ -1,0 +1,3 @@
+# src/features — módulos por funcionalidad
+# Cada sub-carpeta agrupa componentes, hooks y utilidades de una feature.
+# Ejemplo: auth/, test-cases/, test-runs/, results/

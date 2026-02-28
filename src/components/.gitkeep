@@ -1,0 +1,3 @@
+# src/components — componentes UI reutilizables
+# components/ui/ → generados por shadcn/ui
+# components/layout/ → Shell, Sidebar, Header, etc.

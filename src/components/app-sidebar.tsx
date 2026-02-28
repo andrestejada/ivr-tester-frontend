@@ -1,0 +1,101 @@
+/**
+ * AppSidebar — sidebar de navegación principal de la aplicación.
+ *
+ * Utiliza los componentes Sidebar de shadcn/ui en modo `collapsible="icon"`
+ * para que se contraiga a solo iconos en desktop. En mobile se comporta como
+ * un sheet offcanvas (comportamiento por defecto de shadcn Sidebar).
+ */
+import { Link, useLocation } from 'react-router-dom'
+import { LayoutDashboard, ClipboardList, PlayCircle, BarChart2 } from 'lucide-react'
+
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarHeader,
+} from '@/components/ui/sidebar'
+import { NavUser } from '@/components/nav-user'
+
+/** Ítems de navegación principal */
+const navItems = [
+  {
+    label: 'Dashboard',
+    href: '/dashboard',
+    icon: LayoutDashboard,
+  },
+  {
+    label: 'Casos de Prueba',
+    href: '/test-cases',
+    icon: ClipboardList,
+  },
+  {
+    label: 'Ejecuciones',
+    href: '/executions',
+    icon: PlayCircle,
+  },
+  {
+    label: 'Resultados',
+    href: '/results',
+    icon: BarChart2,
+  },
+]
+
+/** Usuario stub hasta que HU-09 integre autenticación real */
+const stubUser = {
+  name: 'Usuario',
+  email: 'usuario@ivrtester.com',
+}
+
+export function AppSidebar() {
+  const { pathname } = useLocation()
+
+  return (
+    <Sidebar collapsible="icon">
+      {/* Encabezado del sidebar con nombre de la app */}
+      <SidebarHeader>
+        <div className="flex items-center gap-2 px-2 py-1">
+          <span className="font-semibold text-sm group-data-[collapsible=icon]:hidden">
+            IVR Tester
+          </span>
+        </div>
+      </SidebarHeader>
+
+      {/* Contenido — ítems de navegación */}
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Navegación</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {navItems.map((item) => (
+                <SidebarMenuItem key={item.href}>
+                  {/* isActive resalta visualmente el ítem cuando la URL coincide */}
+                  <SidebarMenuButton
+                    asChild
+                    isActive={pathname === item.href || pathname.startsWith(item.href + '/')}
+                    tooltip={item.label}
+                  >
+                    <Link to={item.href}>
+                      <item.icon />
+                      <span>{item.label}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+
+      {/* Footer — dropdown de usuario */}
+      <SidebarFooter>
+        <NavUser user={stubUser} />
+      </SidebarFooter>
+    </Sidebar>
+  )
+}

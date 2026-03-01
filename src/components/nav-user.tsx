@@ -1,12 +1,9 @@
 /**
- * NavUser — componente de usuario en el footer del sidebar.
- *
- * Muestra el avatar y nombre del usuario autenticado junto con un
- * DropdownMenu con opciones de Perfil y Cerrar sesión.
- *
- * Nota: Las acciones son stubs hasta que HU-09 integre autenticación real.
+ * Componente de usuario en el footer del sidebar.
+ * Muestra el avatar y nombre con opciones de perfil y cerrar sesión.
  */
 import { ChevronsUpDown, LogOut, User } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -30,6 +27,7 @@ interface NavUserProps {
     email: string
     avatarUrl?: string
   }
+  onSignOut: () => Promise<void>
 }
 
 /** Genera las iniciales del nombre para el AvatarFallback */
@@ -42,7 +40,7 @@ function getInitials(name: string): string {
     .slice(0, 2)
 }
 
-export function NavUser({ user }: NavUserProps) {
+export function NavUser({ user, onSignOut }: NavUserProps) {
   const { isMobile } = useSidebar()
 
   return (
@@ -96,16 +94,18 @@ export function NavUser({ user }: NavUserProps) {
 
             <DropdownMenuSeparator />
 
-            {/* Perfil — stub hasta HU-09 */}
-            <DropdownMenuItem>
-              <User className="mr-2 size-4" />
-              Perfil
+            {/* Perfil */}
+            <DropdownMenuItem asChild>
+              <Link to="/profile">
+                <User className="mr-2 size-4" />
+                Perfil
+              </Link>
             </DropdownMenuItem>
 
             <DropdownMenuSeparator />
 
-            {/* Cerrar sesión — stub hasta HU-09 */}
-            <DropdownMenuItem>
+            {/* Cerrar sesión */}
+            <DropdownMenuItem onClick={onSignOut}>
               <LogOut className="mr-2 size-4" />
               Cerrar sesión
             </DropdownMenuItem>

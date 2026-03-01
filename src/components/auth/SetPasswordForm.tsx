@@ -36,18 +36,13 @@ const setPasswordSchema = z
 export type SetPasswordFormData = z.infer<typeof setPasswordSchema>
 
 interface SetPasswordFormProps {
-  /** Stub handler — será reemplazado por la integración con Supabase en HU-09 */
   onSubmit: (data: SetPasswordFormData) => Promise<void>
   isLoading?: boolean
+  /** Mensaje de error del servidor */
+  error?: string
 }
 
-/**
- * SetPasswordForm
- *
- * Formulario para establecer contraseña por primera vez (destino del magic link de invitación).
- * Validación client-side con Zod; sin llamadas al SDK de Supabase.
- */
-export function SetPasswordForm({ onSubmit, isLoading = false }: SetPasswordFormProps) {
+export function SetPasswordForm({ onSubmit, isLoading = false, error }: SetPasswordFormProps) {
   const form = useForm<SetPasswordFormData>({
     resolver: zodResolver(setPasswordSchema),
     defaultValues: { nombre: '', telefono: '', cargo: '', empresa: '', password: '', confirmPassword: '' },
@@ -189,6 +184,13 @@ export function SetPasswordForm({ onSubmit, isLoading = false }: SetPasswordForm
                 </FormItem>
               )}
             />
+
+            {/* Error del servidor */}
+            {error && (
+              <p role="alert" className="text-sm font-medium text-destructive">
+                {error}
+              </p>
+            )}
 
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

@@ -1,26 +1,31 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+
+import { supabase } from '@/lib/supabase'
 import { LoginForm, type LoginFormData } from '@/components/auth/LoginForm'
 
-/**
- * LoginPage — ruta pública /login
- *
- * Renderiza el formulario de inicio de sesión.
- * El handler `handleLogin` es un stub tipado; la integración real con Supabase
- * se implementará en HU-09.
- */
 export default function LoginPage() {
+  const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | undefined>()
 
-  /** Stub handler — reemplazar con llamada real a Supabase Auth en HU-09 */
   async function handleLogin(data: LoginFormData) {
     setIsLoading(true)
-    try {
-      console.log('[LoginPage] stub handleLogin:', data)
-      // TODO HU-09: await supabase.auth.signInWithPassword({ email: data.email, password: data.password })
-    } finally {
+    setError(undefined)
+
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email: data.email,
+      password: data.password,
+    })
+
+    if (authError) {
+      setError('Credenciales incorrectas. Verifica tu email y contraseña.')
       setIsLoading(false)
+      return
     }
+
+    navigate('/dashboard')
   }
 
-  return <LoginForm onSubmit={handleLogin} isLoading={isLoading} />
+  return <LoginForm onSubmit={handleLogin} isLoading={isLoading} error={error} />
 }

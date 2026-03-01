@@ -1,35 +1,39 @@
-/**
- * ProtectedLayout — shell para las rutas protegidas de la aplicación.
- *
- * Envuelve todas las rutas autenticadas con el sidebar de navegación y el
- * encabezado. Se configura como `element` de un <Route> padre en React Router
- * y el contenido de cada ruta hija se renderiza a través del <Outlet />.
- *
- * La guardia de autenticación (redirección al login si no hay sesión) se
- * implementará en HU-09.
- */
-import { Outlet } from 'react-router-dom'
+import { Navigate, Outlet } from 'react-router-dom'
 
+import { useAuth } from '@/hooks/useAuth'
 import { AppSidebar } from '@/components/app-sidebar'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { Separator } from '@/components/ui/separator'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export default function ProtectedLayout() {
+  const { session, loading } = useAuth()
+
+  if (loading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Skeleton className="h-12 w-12 rounded-full" />
+          <Skeleton className="h-4 w-48" />
+          <Skeleton className="h-4 w-32" />
+        </div>
+      </div>
+    )
+  }
+
+  if (!session) {
+    return <Navigate to="/login" replace />
+  }
+
   return (
     <SidebarProvider>
-      {/* Sidebar de navegación — colapsable a iconos en desktop, offcanvas en mobile */}
       <AppSidebar />
-
       <SidebarInset>
-        {/* Encabezado de página */}
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-          {/* Botón para colapsar / expandir el sidebar */}
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
           <span className="text-sm font-medium text-muted-foreground">IVR Tester</span>
         </header>
-
-        {/* Área de contenido — cada ruta hija se renderiza aquí */}
         <main className="flex flex-1 flex-col p-4">
           <Outlet />
         </main>
@@ -37,3 +41,4 @@ export default function ProtectedLayout() {
     </SidebarProvider>
   )
 }
+

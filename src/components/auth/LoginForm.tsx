@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/form'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
-/** Schema de validación client-side — sin llamadas a Supabase */
+/** Schema de validación del formulario de login */
 const loginSchema = z.object({
   email: z.email({ message: 'Ingresa un email válido' }),
   password: z.string().min(6, { message: 'La contraseña debe tener al menos 6 caracteres' }),
@@ -24,18 +24,13 @@ const loginSchema = z.object({
 export type LoginFormData = z.infer<typeof loginSchema>
 
 interface LoginFormProps {
-  /** Stub handler — será reemplazado por la integración con Supabase en HU-09 */
   onSubmit: (data: LoginFormData) => Promise<void>
   isLoading?: boolean
+  /** Mensaje de error del servidor */
+  error?: string
 }
 
-/**
- * LoginForm
- *
- * Formulario de inicio de sesión con validación client-side (Zod + React Hook Form).
- * No realiza ninguna llamada al SDK de Supabase; el handler `onSubmit` es un stub tipado.
- */
-export function LoginForm({ onSubmit, isLoading = false }: LoginFormProps) {
+export function LoginForm({ onSubmit, isLoading = false, error }: LoginFormProps) {
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: '', password: '' },
@@ -90,6 +85,13 @@ export function LoginForm({ onSubmit, isLoading = false }: LoginFormProps) {
                 </FormItem>
               )}
             />
+
+            {/* Error del servidor (ej. credenciales incorrectas) */}
+            {error && (
+              <p role="alert" className="text-sm font-medium text-destructive">
+                {error}
+              </p>
+            )}
 
             {/* Botón de submit con estado de carga */}
             <Button type="submit" className="w-full" disabled={isLoading}>

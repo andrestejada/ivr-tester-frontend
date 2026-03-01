@@ -1,10 +1,4 @@
-/**
- * AppSidebar — sidebar de navegación principal de la aplicación.
- *
- * Utiliza los componentes Sidebar de shadcn/ui en modo `collapsible="icon"`
- * para que se contraiga a solo iconos en desktop. En mobile se comporta como
- * un sheet offcanvas (comportamiento por defecto de shadcn Sidebar).
- */
+/** Sidebar de navegación principal. */
 import { Link, useLocation } from 'react-router-dom'
 import { LayoutDashboard, ClipboardList, PlayCircle, BarChart2 } from 'lucide-react'
 
@@ -21,6 +15,7 @@ import {
   SidebarHeader,
 } from '@/components/ui/sidebar'
 import { NavUser } from '@/components/nav-user'
+import { useAuth } from '@/hooks/useAuth'
 
 /** Ítems de navegación principal */
 const navItems = [
@@ -46,14 +41,14 @@ const navItems = [
   },
 ]
 
-/** Usuario stub hasta que HU-09 integre autenticación real */
-const stubUser = {
-  name: 'Usuario',
-  email: 'usuario@ivrtester.com',
-}
-
 export function AppSidebar() {
   const { pathname } = useLocation()
+  const { user, signOut } = useAuth()
+
+  const navUser = {
+    name: user?.user_metadata?.nombre ?? user?.email?.split('@')[0] ?? 'Usuario',
+    email: user?.email ?? '',
+  }
 
   return (
     <Sidebar collapsible="icon">
@@ -94,7 +89,7 @@ export function AppSidebar() {
 
       {/* Footer — dropdown de usuario */}
       <SidebarFooter>
-        <NavUser user={stubUser} />
+        <NavUser user={navUser} onSignOut={signOut} />
       </SidebarFooter>
     </Sidebar>
   )

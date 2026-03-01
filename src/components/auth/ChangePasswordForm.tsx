@@ -30,19 +30,13 @@ const changePasswordSchema = z
 export type ChangePasswordFormData = z.infer<typeof changePasswordSchema>
 
 interface ChangePasswordFormProps {
-  /** Stub handler — será reemplazado por la integración con Supabase en HU-09 */
   onSubmit: (data: ChangePasswordFormData) => Promise<void>
   isLoading?: boolean
+  error?: string
+  success?: boolean
 }
 
-/**
- * ChangePasswordForm
- *
- * Componente reutilizable para cambiar la contraseña desde el perfil del usuario.
- * Validación client-side con Zod; sin llamadas al SDK de Supabase.
- * Se integra en ProfilePage bajo /profile.
- */
-export function ChangePasswordForm({ onSubmit, isLoading = false }: ChangePasswordFormProps) {
+export function ChangePasswordForm({ onSubmit, isLoading = false, error, success }: ChangePasswordFormProps) {
   const form = useForm<ChangePasswordFormData>({
     resolver: zodResolver(changePasswordSchema),
     defaultValues: { currentPassword: '', newPassword: '', confirmPassword: '' },
@@ -118,6 +112,18 @@ export function ChangePasswordForm({ onSubmit, isLoading = false }: ChangePasswo
                 </FormItem>
               )}
             />
+
+            {/* Feedback servidor */}
+            {error && (
+              <p role="alert" className="text-sm font-medium text-destructive">
+                {error}
+              </p>
+            )}
+            {success && (
+              <p role="status" className="text-sm font-medium text-green-600">
+                Contraseña actualizada correctamente.
+              </p>
+            )}
 
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

@@ -72,7 +72,7 @@ export default function SetPasswordPage() {
       return
     }
 
-    navigate('/dashboard')
+    navigate('/architectures')
   }
 
   return <SetPasswordForm onSubmit={handleSetPassword} isLoading={isLoading} error={error} />

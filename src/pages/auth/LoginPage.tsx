@@ -24,7 +24,7 @@ export default function LoginPage() {
       return
     }
 
-    navigate('/dashboard')
+    navigate('/architectures')
   }
 
   return <LoginForm onSubmit={handleLogin} isLoading={isLoading} error={error} />

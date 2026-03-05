@@ -20,8 +20,8 @@ import { useAuth } from '@/hooks/useAuth'
 /** Ítems de navegación principal */
 const navItems = [
   {
-    label: 'Dashboard',
-    href: '/dashboard',
+    label: 'Arquitecturas',
+    href: '/architectures',
     icon: LayoutDashboard,
   },
   {

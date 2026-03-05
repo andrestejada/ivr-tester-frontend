@@ -65,7 +65,7 @@ describe('SetPasswordPage', () => {
     expect(await screen.findByText('Enlace inválido')).toBeInTheDocument()
   })
 
-  it('navega a /dashboard tras activar cuenta correctamente', async () => {
+  it('navega a /architectures tras activar cuenta correctamente', async () => {
     mockVerifyOtp.mockResolvedValue({ data: { user: mockUser, session: mockSession }, error: null })
     mockUpdateUser.mockResolvedValue({ data: { user: mockUser }, error: null })
     const user = userEvent.setup()
@@ -80,6 +80,6 @@ describe('SetPasswordPage', () => {
     await user.type(screen.getByLabelText(/confirmar contraseña/i), 'NuevaPass123!')
     await user.click(screen.getByRole('button', { name: /activar cuenta/i }))
 
-    expect(mockNavigate).toHaveBeenCalledWith('/dashboard')
+    expect(mockNavigate).toHaveBeenCalledWith('/architectures')
   })
 })

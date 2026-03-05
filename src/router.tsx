@@ -6,11 +6,8 @@ import LoginPage from '@/pages/auth/LoginPage'
 import SetPasswordPage from '@/pages/auth/SetPasswordPage'
 import InvalidLinkPage from '@/pages/auth/InvalidLinkPage'
 import ProfilePage from '@/pages/profile/ProfilePage'
+import { IVRArchitecturesPage } from '@/features/ivr-architectures'
 
-/* ───────────────────────────────────────────
-   Páginas placeholder — se reemplazarán en
-   HU-10, HU-11 y HU-12
-─────────────────────────────────────────── */
 function PlaceholderPage({ title }: { title: string }) {
   return (
     <div className="flex flex-col gap-2">
@@ -20,13 +17,6 @@ function PlaceholderPage({ title }: { title: string }) {
   )
 }
 
-/**
- * AppRouter
- *
- * Define todas las rutas de la aplicación.
- * - Rutas públicas bajo AuthLayout (sin sidebar): /login, /auth/*
- * - Rutas protegidas bajo ProtectedLayout (con sidebar): /dashboard, /profile, etc.
- */
 export default function AppRouter() {
   return (
     <Routes>
@@ -39,8 +29,8 @@ export default function AppRouter() {
 
       {/* ── Rutas protegidas — ProtectedLayout (con sidebar) ── */}
       <Route element={<ProtectedLayout />}>
-        <Route index element={<Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard" element={<PlaceholderPage title="Dashboard" />} />
+        <Route index element={<Navigate to="/architectures" replace />} />
+        <Route path="/architectures" element={<IVRArchitecturesPage />} />
         <Route path="/test-cases" element={<PlaceholderPage title="Casos de Prueba" />} />
         <Route path="/executions" element={<PlaceholderPage title="Ejecuciones" />} />
         <Route path="/results" element={<PlaceholderPage title="Resultados" />} />

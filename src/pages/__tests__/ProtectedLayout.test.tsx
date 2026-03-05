@@ -24,11 +24,11 @@ function makeAuth(overrides: Partial<AuthContextType> = {}): AuthContextType {
   }
 }
 
-function renderLayout(initialPath = '/dashboard') {
+function renderLayout(initialPath = '/architectures') {
   render(
     <MemoryRouter initialEntries={[initialPath]}>
       <Routes>
-        <Route path="/dashboard" element={<ProtectedLayout />} />
+        <Route path="/architectures" element={<ProtectedLayout />} />
         <Route path="/login" element={<div>Login Page</div>} />
       </Routes>
     </MemoryRouter>,

@@ -35,7 +35,7 @@ function renderPage() {
 describe('LoginPage', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('navega a /dashboard cuando las credenciales son correctas', async () => {
+  it('navega a /architectures cuando las credenciales son correctas', async () => {
     mockSignIn.mockResolvedValue({ data: { user: mockUser, session: mockSession }, error: null })
     const user = userEvent.setup()
     renderPage()
@@ -48,7 +48,7 @@ describe('LoginPage', () => {
       email: 'test@ejemplo.com',
       password: 'password123',
     })
-    expect(mockNavigate).toHaveBeenCalledWith('/dashboard')
+    expect(mockNavigate).toHaveBeenCalledWith('/architectures')
   })
 
   it('muestra mensaje de error cuando las credenciales son incorrectas', async () => {

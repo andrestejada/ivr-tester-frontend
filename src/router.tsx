@@ -7,6 +7,7 @@ import SetPasswordPage from '@/pages/auth/SetPasswordPage'
 import InvalidLinkPage from '@/pages/auth/InvalidLinkPage'
 import ProfilePage from '@/pages/profile/ProfilePage'
 import { IVRArchitecturesPage } from '@/features/ivr-architectures'
+import { TestCasesPage } from '@/features/test-cases'
 
 function PlaceholderPage({ title }: { title: string }) {
   return (
@@ -31,7 +32,7 @@ export default function AppRouter() {
       <Route element={<ProtectedLayout />}>
         <Route index element={<Navigate to="/architectures" replace />} />
         <Route path="/architectures" element={<IVRArchitecturesPage />} />
-        <Route path="/test-cases" element={<PlaceholderPage title="Casos de Prueba" />} />
+        <Route path="/test-cases" element={<TestCasesPage />} />
         <Route path="/executions" element={<PlaceholderPage title="Ejecuciones" />} />
         <Route path="/results" element={<PlaceholderPage title="Resultados" />} />
         <Route path="/profile" element={<ProfilePage />} />

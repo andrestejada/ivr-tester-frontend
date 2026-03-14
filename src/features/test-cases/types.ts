@@ -18,3 +18,12 @@ export interface TestCase {
   flow_script: FlowStep[];
   created_at: string;
 }
+
+export interface TestExecution {
+  id: string;
+  test_case_id: string;
+  status: 'PASSED' | 'FAILED' | 'ERROR';
+  duration_seconds: number | null;
+  provider_call_sid: string | null;
+  executed_at: string;
+}

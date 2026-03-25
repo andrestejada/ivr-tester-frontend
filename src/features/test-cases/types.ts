@@ -22,7 +22,7 @@ export interface TestCase {
 export interface TestExecution {
   id: string;
   test_case_id: string;
-  status: 'PASSED' | 'FAILED' | 'ERROR';
+  status: 'PASSED' | 'FAILED' | 'ERROR' | 'RUNNING';
   duration_seconds: number | null;
   provider_call_sid: string | null;
   executed_at: string;

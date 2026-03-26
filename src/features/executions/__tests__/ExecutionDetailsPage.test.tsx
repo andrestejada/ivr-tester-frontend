@@ -41,6 +41,7 @@ describe('ExecutionDetailsPage', () => {
       executionDetails: undefined,
       isLoading: true,
       isError: false,
+      error: null,
       errorMessage: '',
       refetch: vi.fn(),
     });
@@ -55,6 +56,7 @@ describe('ExecutionDetailsPage', () => {
       executionDetails: undefined,
       isLoading: false,
       isError: true,
+      error: new Error('Error de backend'),
       errorMessage: 'Error de backend',
       refetch: vi.fn(),
     });
@@ -69,6 +71,7 @@ describe('ExecutionDetailsPage', () => {
 
   it('muestra información y logs cuando hay resultados', async () => {
     mockUseTestExecutionDetails.mockReturnValue({
+      error: null,
       executionDetails: {
         id: 'execution-1',
         test_case_id: 'tc-1',

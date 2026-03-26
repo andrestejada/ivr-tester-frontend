@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { listTestExecutions, executeTestCase, getTestExecutionDetails } from './api';
-import type { ExecuteTestCaseRequest } from './api';
 import { getErrorMessage } from '@/lib/helpers/getErrorMessage';
 import type { TestExecution } from '@/features/test-cases/types';
 import type { TestExecutionDetailsResponse } from './types';
@@ -37,8 +36,8 @@ export function useTestExecutions(architectureId: string | null, testCaseId: str
 export function useCreateTestExecution(architectureId: string | null, testCaseId: string | null) {
   const queryClient = useQueryClient();
   const { error, isError, mutateAsync, isPending, isSuccess, reset } = useMutation({
-    mutationFn: (request: ExecuteTestCaseRequest) =>
-      executeTestCase(architectureId!, testCaseId!, request),
+    mutationFn: () =>
+      executeTestCase(architectureId!, testCaseId!),
     onSuccess: () => {
       // Invalidate the test executions query to refresh the history
       queryClient.invalidateQueries({

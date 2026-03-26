@@ -27,7 +27,7 @@ export function NewExecutionTab({ architecture, testCaseId, testCase }: NewExecu
     if (!isReady || !architecture) return;
 
     try {
-      await execute({ phone_number: architecture.phone_number });
+      await execute();
     } catch (error) {
       console.error('Error executing test case:', error);
       // Error is handled by the hook

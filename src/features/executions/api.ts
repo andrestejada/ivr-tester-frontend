@@ -1,5 +1,6 @@
 import httpClient from '@/lib/http/client';
 import type { TestExecution } from '@/features/test-cases/types';
+import type { TestExecutionDetailsResponse } from './types';
 
 export interface ExecuteTestCaseRequest {
   phone_number: string;
@@ -45,6 +46,24 @@ export async function executeTestCase(
   const response = await httpClient.post(
     `/api/v1/ivr-architectures/${architectureId}/test-cases/${testCaseId}/executions`,
     request
+  );
+  return response.data;
+}
+
+/**
+ * Get detailed information about a specific test execution
+ * @param architectureId - The IVR architecture ID
+ * @param testCaseId - The test case ID
+ * @param executionId - The execution ID
+ * @returns The execution details with logs and test case info
+ */
+export async function getTestExecutionDetails(
+  architectureId: string,
+  testCaseId: string,
+  executionId: string
+): Promise<TestExecutionDetailsResponse> {
+  const response = await httpClient.get(
+    `/api/v1/ivr-architectures/${architectureId}/test-cases/${testCaseId}/executions/${executionId}`
   );
   return response.data;
 }

@@ -3,6 +3,7 @@ import { ArrowUpDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { TestExecution } from '@/features/test-cases/types';
+import { ExecutionActionsCell } from './components/ExecutionActionsCell';
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -29,7 +30,10 @@ const getStatusLabel = (status: string): string => {
   return labels[status] || status;
 };
 
-export const columns: ColumnDef<TestExecution>[] = [
+export const getColumns = (
+  architectureId: string,
+  testCaseId: string
+): ColumnDef<TestExecution>[] => [
   {
     accessorKey: 'status',
     header: ({ column }) => (
@@ -91,5 +95,17 @@ export const columns: ColumnDef<TestExecution>[] = [
         </span>
       );
     },
+  },
+  {
+    id: 'actions',
+    header: 'Acciones',
+    cell: ({ row }) => (
+      <ExecutionActionsCell
+        executionId={row.original.id}
+        architectureId={architectureId}
+        testCaseId={testCaseId}
+      />
+    ),
+    enableSorting: false,
   },
 ];

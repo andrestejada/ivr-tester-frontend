@@ -1,7 +1,14 @@
-export { listTestExecutions, executeTestCase } from './api';
+export { listTestExecutions, executeTestCase, getTestExecutionDetails } from './api';
 export type { ExecuteTestCaseRequest, ExecuteTestCaseResponse } from './api';
-export { useTestExecutions, useCreateTestExecution } from './hooks';
-export { columns } from './columns';
+export { useTestExecutions, useCreateTestExecution, useTestExecutionDetails } from './hooks';
+export type {
+  TestExecutionDetailsResponse,
+  ExecutionLogResponse,
+  TestCaseDetailResponse,
+  IVRArchitectureDetailResponse,
+} from './types';
+export { getColumns } from './columns';
 export { ExecutionHistoryTab } from './ExecutionHistoryTab';
 export { NewExecutionTab } from './NewExecutionTab';
 export { ExecutionsPage } from './ExecutionsPage';
+export { ExecutionDetailsPage } from './pages/ExecutionDetailsPage';

@@ -9,6 +9,7 @@ import ProfilePage from '@/pages/profile/ProfilePage'
 import { IVRArchitecturesPage } from '@/features/ivr-architectures'
 import { TestCasesPage } from '@/features/test-cases'
 import { ExecutionsPage } from '@/features/executions'
+import { ExecutionDetailsPage } from '@/features/executions/pages/ExecutionDetailsPage'
 
 function PlaceholderPage({ title }: { title: string }) {
   return (
@@ -35,6 +36,7 @@ export default function AppRouter() {
         <Route path="/architectures" element={<IVRArchitecturesPage />} />
         <Route path="/test-cases" element={<TestCasesPage />} />
         <Route path="/executions" element={<ExecutionsPage />} />
+        <Route path="/executions/:architectureId/test-cases/:testCaseId/details/:executionId" element={<ExecutionDetailsPage />} />
         <Route path="/results" element={<PlaceholderPage title="Resultados" />} />
         <Route path="/profile" element={<ProfilePage />} />
       </Route>

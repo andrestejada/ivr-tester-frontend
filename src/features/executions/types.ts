@@ -41,6 +41,7 @@ export interface TestExecutionDetailsResponse {
   status: 'PASSED' | 'FAILED' | 'ERROR' | 'RUNNING';
   duration_seconds: number | null;
   provider_call_sid: string | null;
+  full_call_transcript: string | null;
   executed_at: string; // ISO 8601 datetime
   test_case: TestCaseDetailResponse;
   logs: ExecutionLogResponse[];

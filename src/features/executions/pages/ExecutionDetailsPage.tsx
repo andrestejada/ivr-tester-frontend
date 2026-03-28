@@ -7,6 +7,7 @@ import { AlertCircle, ArrowLeft, Loader2 } from 'lucide-react';
 import { useTestExecutionDetails } from '../hooks';
 import { ExecutionHeader } from '../components/ExecutionHeader';
 import { ExecutionOverview } from '../components/ExecutionOverview';
+import { ExecutionTranscript } from '../components/ExecutionTranscript';
 import { ExecutionLogsList } from '../components/ExecutionLogsList';
 
 export const ExecutionDetailsPage = () => {
@@ -97,6 +98,9 @@ export const ExecutionDetailsPage = () => {
 
       {/* Header con KPIs */}
       <ExecutionHeader execution={executionDetails} />
+
+      {/* Transcripción Completa */}
+      <ExecutionTranscript transcript={executionDetails.full_call_transcript} />
 
       {/* Logs de Ejecución */}
       <ExecutionLogsList logs={executionDetails.logs} />

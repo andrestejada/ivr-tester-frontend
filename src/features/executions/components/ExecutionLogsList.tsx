@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/table';
 import { AlertCircle, ListChecks } from 'lucide-react';
 import type { ExecutionLogResponse } from '../types';
+import { mapActionToSpanish } from '../utils/mappers';
 
 interface ExecutionLogsListProps {
   logs: ExecutionLogResponse[];
@@ -103,9 +104,9 @@ export const ExecutionLogsList = ({ logs }: ExecutionLogsListProps) => {
                   {/* Acción Ejecutada */}
                   <TableCell>
                     {log.action_taken ? (
-                      <code className="text-xs bg-black/5 dark:bg-white/5 px-2 py-1 rounded">
-                        {log.action_taken}
-                      </code>
+                      <span className="text-xs bg-black/5 dark:bg-white/5 px-2 py-1 rounded block w-fit">
+                        {mapActionToSpanish(log.action_taken)}
+                      </span>
                     ) : (
                       <span className="text-muted-foreground italic">-</span>
                     )}

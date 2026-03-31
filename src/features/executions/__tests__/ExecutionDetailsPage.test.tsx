@@ -104,7 +104,7 @@ describe('ExecutionDetailsPage', () => {
             expected_text: 'Hola',
             actual_transcription: 'Hola',
             confidence_score: 98.56,
-            action_taken: 'send_dtmf_1',
+            action_taken: 'Sent DTMF: 1',
             created_at: new Date('2026-01-01T10:00:01.000Z').toISOString(),
           },
         ],

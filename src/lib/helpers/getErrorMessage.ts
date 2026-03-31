@@ -1,9 +1,15 @@
+interface ErrorResponse {
+  status?: number
+  data?: { detail?: unknown; msg?: string }
+  message?: string
+}
+
 export function getErrorMessage(error: unknown): string | null {
   if (!error) {
     return null;
   }
 
-  const err = error as any;
+  const err = error as ErrorResponse;
 
   if (err.status === 409) {
     return 'Ya existe una arquitectura con ese nombre o número de teléfono.';

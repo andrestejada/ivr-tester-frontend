@@ -16,12 +16,18 @@ export const createIVRArchitectureSchema = z.object({
     .or(z.literal('')),
 });
 
+interface BackendError {
+  status?: number
+  data?: { detail?: unknown; msg?: string }
+  message?: string
+}
+
 export function mapBackendError(error: unknown): string {
   if (!error) {
     return 'Ocurrió un error inesperado. Inténtalo de nuevo.';
   }
 
-  const err = error as any;
+  const err = error as BackendError;
 
   if (err.status === 409) {
     return 'Ya existe una arquitectura con ese nombre o número de teléfono.';

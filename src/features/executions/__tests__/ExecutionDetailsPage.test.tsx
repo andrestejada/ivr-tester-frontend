@@ -79,6 +79,7 @@ describe('ExecutionDetailsPage', () => {
         duration_seconds: 12,
         provider_call_sid: 'CS123',
         executed_at: new Date('2026-01-01T10:00:00.000Z').toISOString(),
+        full_call_transcript: null,
         test_case: {
           id: 'tc-1',
           ivr_architecture_id: 'arch-1',

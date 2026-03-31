@@ -35,8 +35,8 @@ const navItems = [
     icon: PlayCircle,
   },
   {
-    label: 'Resultados',
-    href: '/results',
+    label: 'Métricas',
+    href: '/metrics',
     icon: BarChart2,
   },
 ]

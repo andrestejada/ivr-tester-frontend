@@ -8,7 +8,7 @@ export const createIVRArchitectureSchema = z.object({
   phone_number: z
     .string()
     .min(1, 'El teléfono es obligatorio')
-    .regex(/^\d+$/, 'Solo se permiten números'),
+    .regex(/^\+?\d+$/, 'Solo se permiten números y el símbolo +'),
   description: z
     .string()
     .max(500, 'Máximo 500 caracteres')

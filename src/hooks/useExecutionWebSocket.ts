@@ -13,8 +13,11 @@
 
 import { useEffect, useReducer, useRef, useCallback, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { createInitialProgressState, progressReducer } from '@/features/executions/utils/progressReducer';
-import type { ExecutionProgressState, ExecutionWebSocketEvent } from '@/features/executions/types';
+import {
+  createInitialProgressState,
+  progressReducer,
+} from '@/features/executions/utils/progressReducer';
+import type { ExecutionWebSocketEvent } from '@/features/executions/types';
 
 /**
  * Hook para suscribirse a eventos WebSocket de una ejecución en tiempo real.
@@ -31,7 +34,7 @@ import type { ExecutionProgressState, ExecutionWebSocketEvent } from '@/features
  */
 export function useExecutionWebSocket(executionId: string | null, flowScript: any[] = []) {
   const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectTimeoutRef = useRef<Timeout | null>(null);
   const shouldReconnectRef = useRef(true);
 
   // Estado de progreso de ejecución
@@ -42,9 +45,9 @@ export function useExecutionWebSocket(executionId: string | null, flowScript: an
   );
 
   // Estados de conexión
-  const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'reconnecting'>(
-    'disconnected'
-  );
+  const [connectionStatus, setConnectionStatus] = useState<
+    'disconnected' | 'connecting' | 'connected' | 'reconnecting'
+  >('disconnected');
   const [wsError, setWsError] = useState<string | null>(null);
 
   // Contador de reconexiones para backoff exponencial
@@ -65,8 +68,13 @@ export function useExecutionWebSocket(executionId: string | null, flowScript: an
    */
   const connect = useCallback(async () => {
     if (!executionId || !shouldReconnectRef.current) {
+      console.debug(
+        `[WebSocket] Connect abortado: executionId=${executionId}, shouldReconnect=${shouldReconnectRef.current}`
+      );
       return;
     }
+
+    console.debug(`[WebSocket] Iniciando conexión para execution: ${executionId}`);
 
     try {
       setConnectionStatus('connecting');
@@ -116,14 +124,19 @@ export function useExecutionWebSocket(executionId: string | null, flowScript: an
           dispatchProgressEvent(parsedEvent);
 
           // Chequear si es terminal para cerrar conexión
-          if (parsedEvent.event_type === 'execution_finished' || parsedEvent.event_type === 'execution_error') {
+          if (
+            parsedEvent.event_type === 'execution_finished' ||
+            parsedEvent.event_type === 'execution_error'
+          ) {
             console.info(`[WebSocket] Evento terminal recibido: ${parsedEvent.event_type}`);
             shouldReconnectRef.current = false; // No reconectar si es terminal
             ws.close(1000, 'Execution finished');
           }
         } catch (error) {
           console.error('[WebSocket] Error parseando evento:', error);
-          setWsError(`Error procesando evento: ${error instanceof Error ? error.message : 'Unknown error'}`);
+          setWsError(
+            `Error procesando evento: ${error instanceof Error ? error.message : 'Unknown error'}`
+          );
         }
       };
 
@@ -144,7 +157,9 @@ export function useExecutionWebSocket(executionId: string | null, flowScript: an
         // Intentar reconexión solo si no fue cierre normal y no es terminal
         if (!event.wasClean && shouldReconnectRef.current && !progressState.is_terminal) {
           const delay = getReconnectDelay();
-          console.debug(`[WebSocket] Reconectando en ${delay}ms (intento ${reconnectCountRef.current + 1})`);
+          console.debug(
+            `[WebSocket] Reconectando en ${delay}ms (intento ${reconnectCountRef.current + 1})`
+          );
           setConnectionStatus('reconnecting');
           reconnectCountRef.current++;
 
@@ -162,17 +177,24 @@ export function useExecutionWebSocket(executionId: string | null, flowScript: an
   }, [executionId, progressState.is_terminal, getReconnectDelay]);
 
   /**
-   * Effect: conectar cuando executionId cambia
+   * Effect: conectar SOLO cuando executionId es válido (no null / no vacío)
    */
   useEffect(() => {
-    if (!executionId) {
+    // No conectar si no hay executionId
+    if (!executionId || executionId.trim() === '') {
+      console.debug(`[WebSocket] No conectando: executionId es null o vacío`);
       shouldReconnectRef.current = false;
       if (wsRef.current) {
+        console.debug(`[WebSocket] Cerrando WebSocket existente: executionId vacío`);
         wsRef.current.close();
         wsRef.current = null;
       }
+      setConnectionStatus('disconnected');
+      setWsError(null);
       return;
     }
+
+    console.debug(`[WebSocket] Activando conexión: executionId = ${executionId}`);
 
     // Resetear flags de reconexión cuando se asigna nuevo executionId
     shouldReconnectRef.current = true;

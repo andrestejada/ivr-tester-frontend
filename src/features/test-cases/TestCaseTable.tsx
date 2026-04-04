@@ -1,16 +1,19 @@
 'use client';
 
 import { DataTable } from './DataTable';
-import { columns } from './columns';
+import { createColumns } from './columns';
 import type { TestCase } from './types';
 
 interface TestCaseTableProps {
   testCases: TestCase[];
   isLoading: boolean;
   isEmpty: boolean;
+  onEdit?: (testCase: TestCase) => void;
 }
 
-export function TestCaseTable({ testCases, isLoading, isEmpty }: TestCaseTableProps) {
+export function TestCaseTable({ testCases, isLoading, isEmpty, onEdit }: TestCaseTableProps) {
+  const columns = createColumns(onEdit);
+
   return (
     <DataTable
       columns={columns}

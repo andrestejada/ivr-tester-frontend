@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { createTestCase, listTestCases } from './api';
+import { createTestCase, updateTestCase, listTestCases } from './api';
 import { getErrorMessage } from '@/lib/helpers/getErrorMessage';
 import type { TestCase, CreateTestCaseInput } from './types';
 
@@ -33,6 +33,27 @@ export function useCreateTestCase(architectureId: string | null) {
 
   return {
     create: mutateAsync,
+    error,
+    errorMessage: getErrorMessage(error) ?? '',
+    isError,
+    isLoading: isPending,
+  };
+}
+
+export function useUpdateTestCase(architectureId: string | null) {
+  const queryClient = useQueryClient();
+  const { error, isError, mutateAsync, isPending } = useMutation({
+    mutationFn: ({ testCaseId, data }: { testCaseId: string; data: Partial<CreateTestCaseInput> }) =>
+      updateTestCase(architectureId!, testCaseId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['test-cases', architectureId],
+      });
+    },
+  });
+
+  return {
+    update: mutateAsync,
     error,
     errorMessage: getErrorMessage(error) ?? '',
     isError,

@@ -3,16 +3,29 @@ import { useIVRArchitectures } from '@/features/ivr-architectures/hooks';
 import { useTestCases } from './hooks';
 import { TestCaseTable } from './TestCaseTable';
 import { CreateTestCaseForm } from './CreateTestCaseForm';
+import { UpdateTestCaseForm } from './UpdateTestCaseForm';
 import { Card } from '@/components/ui/card';
+import type { TestCase } from './types';
 
 export function TestCasesPage() {
   const [selectedArchitectureId, setSelectedArchitectureId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'list' | 'form'>('form');
+  const [activeTab, setActiveTab] = useState<'list' | 'form' | 'edit'>('form');
+  const [selectedTestCaseToEdit, setSelectedTestCaseToEdit] = useState<TestCase | null>(null);
 
   const { architectures, isLoading: loadingArchitectures } = useIVRArchitectures();
   const { testCases, isLoading: loadingTestCases } = useTestCases(selectedArchitectureId);
 
   const selectedArchitecture = architectures.find((arch) => arch.id === selectedArchitectureId);
+
+  const handleEditTestCase = (testCase: TestCase) => {
+    setSelectedTestCaseToEdit(testCase);
+    setActiveTab('edit');
+  };
+
+  const handleUpdateSuccess = () => {
+    setSelectedTestCaseToEdit(null);
+    setActiveTab('list');
+  };
 
   return (
     <div className="space-y-6">
@@ -24,7 +37,7 @@ export function TestCasesPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-4 mb-6">
+      <div className="flex gap-4 mb-6 flex-wrap">
         <button
           onClick={() => setActiveTab('list')}
           className={`px-4 py-2 rounded-md font-medium transition-colors ${
@@ -45,6 +58,18 @@ export function TestCasesPage() {
         >
           Crear Nueva
         </button>
+        {selectedTestCaseToEdit && (
+          <button
+            onClick={() => setActiveTab('edit')}
+            className={`px-4 py-2 rounded-md font-medium transition-colors ${
+              activeTab === 'edit'
+                ? 'bg-blue-600 text-white'
+                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            Editando: {selectedTestCaseToEdit.name}
+          </button>
+        )}
       </div>
 
       {/* Selector de Arquitectura - Visible en ambos tabs */}
@@ -71,6 +96,7 @@ export function TestCasesPage() {
           testCases={testCases}
           isLoading={loadingTestCases}
           isEmpty={testCases.length === 0}
+          onEdit={handleEditTestCase}
         />
       )}
 
@@ -107,6 +133,15 @@ export function TestCasesPage() {
             onSuccess={() => setActiveTab('list')}
           />
         </>
+      )}
+
+      {/* Tab: Editar */}
+      {activeTab === 'edit' && selectedArchitectureId && selectedTestCaseToEdit && (
+        <UpdateTestCaseForm
+          architectureId={selectedArchitectureId}
+          testCase={selectedTestCaseToEdit}
+          onSuccess={handleUpdateSuccess}
+        />
       )}
     </div>
   );

@@ -200,7 +200,7 @@ export function progressReducer(
         ...state,
         global_status: 'error',
         duration_seconds: data.duration_seconds,
-        terminal_error_message: data.error_message,
+        terminal_error_message: data.error_message || 'An unexpected error occurred. Please try again.',
         is_terminal: true,
       };
     }

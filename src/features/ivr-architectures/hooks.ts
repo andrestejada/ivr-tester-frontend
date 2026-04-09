@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { createIVRArchitecture, listIVRArchitectures } from './api';
+import { createIVRArchitecture, listIVRArchitectures, updateIVRArchitecture } from './api';
 import { getErrorMessage } from '@/lib/helpers/getErrorMessage';
 import type { IVRArchitecture, CreateIVRArchitectureInput } from './types';
 
@@ -29,6 +29,30 @@ export function useCreateIVRArchitecture() {
 
   return {
     create: mutateAsync,
+    error,
+    errorMessage: getErrorMessage(error) ?? '',
+    isError,
+    isLoading: isPending,
+  };
+}
+
+export function useUpdateIVRArchitecture() {
+  const queryClient = useQueryClient();
+  const { error, isError, mutateAsync, isPending } = useMutation({
+    mutationFn: ({
+      architectureId,
+      data,
+    }: {
+      architectureId: string;
+      data: Partial<CreateIVRArchitectureInput>;
+    }) => updateIVRArchitecture(architectureId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ivr-architectures'] });
+    },
+  });
+
+  return {
+    update: mutateAsync,
     error,
     errorMessage: getErrorMessage(error) ?? '',
     isError,

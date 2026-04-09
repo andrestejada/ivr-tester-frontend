@@ -1,13 +1,22 @@
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { MoreHorizontal } from 'lucide-react';
 import type { IVRArchitecture } from './types';
 
 interface ArchitectureTableProps {
   architectures: IVRArchitecture[];
   isLoading: boolean;
+  onEdit?: (architecture: IVRArchitecture) => void;
 }
 
-export function ArchitectureTable({ architectures, isLoading }: ArchitectureTableProps) {
+export function ArchitectureTable({ architectures, isLoading, onEdit }: ArchitectureTableProps) {
   if (isLoading) {
     return (
       <Card className="p-6">
@@ -38,6 +47,7 @@ export function ArchitectureTable({ architectures, isLoading }: ArchitectureTabl
               <th className="text-left py-3 px-4 font-semibold text-sm">Teléfono</th>
               <th className="text-left py-3 px-4 font-semibold text-sm">Descripción</th>
               <th className="text-left py-3 px-4 font-semibold text-sm">Fecha de creación</th>
+              <th className="text-center py-3 px-4 font-semibold text-sm">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -48,6 +58,21 @@ export function ArchitectureTable({ architectures, isLoading }: ArchitectureTabl
                 <td className="py-3 px-4 text-sm">{arch.description || '-'}</td>
                 <td className="py-3 px-4 text-sm">
                   {new Date(arch.created_at).toLocaleDateString('es-ES')}
+                </td>
+                <td className="py-3 px-4 text-sm text-center">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Abrir menú</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => onEdit?.(arch)}>
+                        Editar
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </td>
               </tr>
             ))}

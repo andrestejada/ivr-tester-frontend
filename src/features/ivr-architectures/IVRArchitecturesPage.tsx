@@ -1,11 +1,24 @@
 import { useState } from 'react';
 import { useIVRArchitectures } from './hooks';
 import { CreateIVRArchitectureForm } from './CreateIVRArchitectureForm';
+import { UpdateIVRArchitectureForm } from './UpdateIVRArchitectureForm';
 import { ArchitectureTable } from './ArchitectureTable';
+import type { IVRArchitecture } from './types';
 
 export function IVRArchitecturesPage() {
-  const [activeTab, setActiveTab] = useState<'form' | 'list'>('form');
+  const [activeTab, setActiveTab] = useState<'form' | 'list' | 'edit'>('form');
+  const [selectedArchitectureToEdit, setSelectedArchitectureToEdit] = useState<IVRArchitecture | null>(null);
   const { architectures, isLoading } = useIVRArchitectures();
+
+  const handleEditArchitecture = (architecture: IVRArchitecture) => {
+    setSelectedArchitectureToEdit(architecture);
+    setActiveTab('edit');
+  };
+
+  const handleUpdateSuccess = () => {
+    setSelectedArchitectureToEdit(null);
+    setActiveTab('list');
+  };
 
   return (
     <div className="min-h-screen  py-8 px-4">
@@ -36,7 +49,19 @@ export function IVRArchitecturesPage() {
         </div>
 
         {activeTab === 'form' && <CreateIVRArchitectureForm />}
-        {activeTab === 'list' && <ArchitectureTable architectures={architectures} isLoading={isLoading} />}
+        {activeTab === 'list' && (
+          <ArchitectureTable 
+            architectures={architectures} 
+            isLoading={isLoading}
+            onEdit={handleEditArchitecture}
+          />
+        )}
+        {activeTab === 'edit' && selectedArchitectureToEdit && (
+          <UpdateIVRArchitectureForm
+            architecture={selectedArchitectureToEdit}
+            onSuccess={handleUpdateSuccess}
+          />
+        )}
       </div>
     </div>
   );

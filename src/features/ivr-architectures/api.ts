@@ -12,3 +12,14 @@ export async function listIVRArchitectures(): Promise<IVRArchitecture[]> {
   const response = await httpClient.get('/api/v1/ivr-architectures');
   return response.data;
 }
+
+export async function updateIVRArchitecture(
+  architectureId: string,
+  data: Partial<CreateIVRArchitectureInput>
+): Promise<IVRArchitecture> {
+  const response = await httpClient.put(
+    `/api/v1/ivr-architectures/${architectureId}`,
+    data
+  );
+  return response.data;
+}

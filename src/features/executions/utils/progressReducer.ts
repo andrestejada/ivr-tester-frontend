@@ -8,7 +8,6 @@ import type {
   ExecutionProgressState,
   ExecutionWebSocketEvent,
   StepProgress,
-  ExecutionEventType,
 } from '../types';
 import type { FlowStep } from '@/features/test-cases/types';
 
@@ -48,6 +47,8 @@ export function progressReducer(
   state: ExecutionProgressState,
   event: ExecutionWebSocketEvent
 ): ExecutionProgressState {
+  console.log(`[Reducer] Procesando evento: ${event.event_type}`, event.data);
+
   switch (event.event_type) {
     case 'execution_started':
       return {
@@ -186,6 +187,7 @@ export function progressReducer(
         ...state,
         global_status: data.status === 'PASSED' ? 'passed' : 'failed',
         duration_seconds: data.duration_seconds,
+        terminal_error_message: data.status === 'PASSED' ? null : state.terminal_error_message,
         is_terminal: true,
       };
     }

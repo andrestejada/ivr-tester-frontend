@@ -36,12 +36,18 @@ export function NewExecutionTab({ architecture, testCaseId, testCase }: NewExecu
     if (!isReady || !architecture) return;
 
     try {
+      console.log('[NewExecutionTab] Iniciando ejecuci\u00f3n de test case...');
       // Ejecutar test case
       const response: ExecuteTestCaseResponse = await execute();
 
-      // Activar suscripción WebSocket con el execution_id retornado
+      console.log('[NewExecutionTab] Respuesta de API:', response);
+
+      // Activar suscripci\u00f3n WebSocket con el execution_id retornado
       if (response?.id) {
+        console.log('[NewExecutionTab] Activando WebSocket para execution_id:', response.id);
         setActiveExecutionId(response.id);
+      } else {
+        console.warn('[NewExecutionTab] API no retorn\u00f3 execution ID:', response);
       }
     } catch (error) {
       console.error('Error executing test case:', error);

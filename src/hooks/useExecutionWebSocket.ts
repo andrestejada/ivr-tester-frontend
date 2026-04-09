@@ -34,7 +34,7 @@ import type { ExecutionWebSocketEvent } from '@/features/executions/types';
  */
 export function useExecutionWebSocket(executionId: string | null, flowScript: any[] = []) {
   const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimeoutRef = useRef<Timeout | null>(null);
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const shouldReconnectRef = useRef(true);
 
   // Estado de progreso de ejecución
@@ -68,13 +68,13 @@ export function useExecutionWebSocket(executionId: string | null, flowScript: an
    */
   const connect = useCallback(async () => {
     if (!executionId || !shouldReconnectRef.current) {
-      console.debug(
+      console.log(
         `[WebSocket] Connect abortado: executionId=${executionId}, shouldReconnect=${shouldReconnectRef.current}`
       );
       return;
     }
 
-    console.debug(`[WebSocket] Iniciando conexión para execution: ${executionId}`);
+    console.log(`[WebSocket] Iniciando conexión para execution: ${executionId}`);
 
     try {
       setConnectionStatus('connecting');
@@ -99,12 +99,12 @@ export function useExecutionWebSocket(executionId: string | null, flowScript: an
       const wsBase = apiBase.replace(/^https?:\/\//, '');
       const wsUrl = `${wsProtocol}://${wsBase}/ws/executions/${executionId}?token=${token}`;
 
-      console.debug(`[WebSocket] Conectando a ${wsUrl}`);
+      console.log(`[WebSocket] Conectando a ${wsUrl}`);
 
       const ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
-        console.debug(`[WebSocket] Conectado a ejecución ${executionId}`);
+        console.log(`[WebSocket] Conectado a ejecución ${executionId}`);
         setConnectionStatus('connected');
         reconnectCountRef.current = 0; // Reset count en conexión exitosa
         wsRef.current = ws;
@@ -128,7 +128,7 @@ export function useExecutionWebSocket(executionId: string | null, flowScript: an
             parsedEvent.event_type === 'execution_finished' ||
             parsedEvent.event_type === 'execution_error'
           ) {
-            console.info(`[WebSocket] Evento terminal recibido: ${parsedEvent.event_type}`);
+            console.log(`[WebSocket] Evento terminal recibido: ${parsedEvent.event_type}`);
             shouldReconnectRef.current = false; // No reconectar si es terminal
             ws.close(1000, 'Execution finished');
           }
@@ -148,7 +148,7 @@ export function useExecutionWebSocket(executionId: string | null, flowScript: an
       };
 
       ws.onclose = (event) => {
-        console.debug(
+        console.log(
           `[WebSocket] Desconectado (code=${event.code}, reason=${event.reason}, clean=${event.wasClean})`
         );
         wsRef.current = null;
@@ -157,7 +157,7 @@ export function useExecutionWebSocket(executionId: string | null, flowScript: an
         // Intentar reconexión solo si no fue cierre normal y no es terminal
         if (!event.wasClean && shouldReconnectRef.current && !progressState.is_terminal) {
           const delay = getReconnectDelay();
-          console.debug(
+          console.log(
             `[WebSocket] Reconectando en ${delay}ms (intento ${reconnectCountRef.current + 1})`
           );
           setConnectionStatus('reconnecting');
@@ -182,10 +182,10 @@ export function useExecutionWebSocket(executionId: string | null, flowScript: an
   useEffect(() => {
     // No conectar si no hay executionId
     if (!executionId || executionId.trim() === '') {
-      console.debug(`[WebSocket] No conectando: executionId es null o vacío`);
+      console.log(`[WebSocket] No conectando: executionId es null o vacío`);
       shouldReconnectRef.current = false;
       if (wsRef.current) {
-        console.debug(`[WebSocket] Cerrando WebSocket existente: executionId vacío`);
+        console.log(`[WebSocket] Cerrando WebSocket existente: executionId vacío`);
         wsRef.current.close();
         wsRef.current = null;
       }
@@ -194,7 +194,7 @@ export function useExecutionWebSocket(executionId: string | null, flowScript: an
       return;
     }
 
-    console.debug(`[WebSocket] Activando conexión: executionId = ${executionId}`);
+    console.log(`[WebSocket] Activando conexión: executionId = ${executionId}`);
 
     // Resetear flags de reconexión cuando se asigna nuevo executionId
     shouldReconnectRef.current = true;

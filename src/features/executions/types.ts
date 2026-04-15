@@ -55,7 +55,7 @@ export interface StepStartedData {
 export interface StepMatchedData {
   step_number: number;
   matched_text: string;
-  confidence: number; // 0.0 to 1.0
+  confidence: number; // porcentaje 0-100
 }
 
 export interface StepFailedData {
@@ -95,7 +95,7 @@ export interface StepProgress {
   current_transcription: string;
   /**
    * Porcentaje de confianza una vez que step_matched o se determina fallo.
-   * Rango: 0-1 (se muestra como porcentaje en UI)
+    * Rango esperado: 0-100 (UI tolera también 0-1 por compatibilidad)
    */
   confidence: number | null;
   /**

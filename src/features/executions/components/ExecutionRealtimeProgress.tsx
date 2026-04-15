@@ -7,6 +7,11 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle2, XCircle, AlertCircle, Loader, ListChecks } from 'lucide-react';
 import type { ExecutionProgressState, StepProgressStatus } from '../types';
+import {
+  formatConfidencePercentage,
+  getConfidenceBadgeColor,
+  mapFailureReasonToSpanish,
+} from '../utils/mappers';
 
 interface ExecutionRealtimeProgressProps {
   /**
@@ -76,24 +81,6 @@ const getStatusConfig = (status: StepProgressStatus) => {
 };
 
 /**
- * Obtiene color para el indicador de confianza
- */
-const getConfidenceBadgeColor = (confidence: number | null) => {
-  if (confidence === null) return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
-  if (confidence >= 0.9) return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-  if (confidence >= 0.7) return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
-  return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
-};
-
-/**
- * Formatea confianza como porcentaje (backend ya envía como %)
- */
-const formatConfidence = (confidence: number | null) => {
-  if (confidence === null) return '-';
-  return `${confidence.toFixed(1)}%`;
-};
-
-/**
  * Obtiene color para el indicador de estado de conexión
  */
 const getConnectionStatusColor = (status: string) => {
@@ -131,6 +118,12 @@ const getConnectionStatusLabel = (status: string) => {
 
 export function ExecutionRealtimeProgress({ state, connectionStatus }: ExecutionRealtimeProgressProps) {
   const globalStatusConfig = getStatusConfig(state.global_status);
+  const terminalMessage =
+    state.terminal_error_message || state.global_status === 'failed'
+      ? mapFailureReasonToSpanish(
+          state.terminal_error_message || 'La prueba finalizó con uno o más pasos fallidos.'
+        )
+      : null;
 
   return (
     <div className="space-y-6">
@@ -173,12 +166,14 @@ export function ExecutionRealtimeProgress({ state, connectionStatus }: Execution
           </div>
 
           {/* Terminal Error Message */}
-          {state.terminal_error_message && (
+          {terminalMessage && (
             <div className="mt-4 p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg flex gap-3">
-              <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+              <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
               <div className="flex-1">
-                <p className="text-sm font-semibold text-red-900 dark:text-red-100">Execution Error</p>
-                <p className="text-sm text-red-800 dark:text-red-200 mt-1 break-words">{state.terminal_error_message}</p>
+                <p className="text-sm font-semibold text-red-900 dark:text-red-100">
+                  {state.global_status === 'error' ? 'Error de ejecución' : 'Prueba finalizada con fallos'}
+                </p>
+                <p className="text-sm text-red-800 dark:text-red-200 mt-1 wrap-break-word">{terminalMessage}</p>
               </div>
             </div>
           )}
@@ -200,7 +195,7 @@ export function ExecutionRealtimeProgress({ state, connectionStatus }: Execution
                 <div className="p-4">
                   <div className="flex items-start gap-4">
                     {/* Step Number Circle */}
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white dark:bg-gray-800 flex-shrink-0">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white dark:bg-gray-800 shrink-0">
                       {stepStatusConfig.icon}
                     </div>
 
@@ -209,7 +204,7 @@ export function ExecutionRealtimeProgress({ state, connectionStatus }: Execution
                       {/* Expected Text */}
                       <div>
                         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Esperado</p>
-                        <p className="text-sm font-semibold text-foreground break-words">
+                        <p className="text-sm font-semibold text-foreground wrap-break-word">
                           {step.expected_text || '—'}
                         </p>
                       </div>
@@ -220,7 +215,7 @@ export function ExecutionRealtimeProgress({ state, connectionStatus }: Execution
                           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                             Transcripción
                           </p>
-                          <p className="text-sm text-foreground break-words italic">
+                          <p className="text-sm text-foreground wrap-break-word italic">
                             {step.current_transcription}
                           </p>
                         </div>
@@ -230,8 +225,8 @@ export function ExecutionRealtimeProgress({ state, connectionStatus }: Execution
                       <div className="flex items-center gap-2 pt-1">
                         {step.confidence !== null && (
                           <>
-                            <Badge className={getConfidenceBadgeColor(step.confidence)}>
-                              {formatConfidence(step.confidence)}
+                            <Badge className={getConfidenceBadgeColor(step.confidence, step.status)}>
+                              {formatConfidencePercentage(step.confidence)}
                             </Badge>
                             <span className="text-xs text-muted-foreground">confianza</span>
                           </>
@@ -241,7 +236,7 @@ export function ExecutionRealtimeProgress({ state, connectionStatus }: Execution
                       {/* Failure Reason */}
                       {step.failure_reason && (
                         <div className="text-xs text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900 px-2 py-1 rounded">
-                          {step.failure_reason}
+                          {mapFailureReasonToSpanish(step.failure_reason)}
                         </div>
                       )}
                     </div>
@@ -260,7 +255,7 @@ export function ExecutionRealtimeProgress({ state, connectionStatus }: Execution
             <CardTitle className="text-base">Transcripción Completa</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-foreground whitespace-pre-wrap break-words max-h-48 overflow-y-auto">
+            <p className="text-sm text-foreground whitespace-pre-wrap wrap-break-word max-h-48 overflow-y-auto">
               {state.accumulated_transcript}
             </p>
           </CardContent>

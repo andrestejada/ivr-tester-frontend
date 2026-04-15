@@ -12,22 +12,36 @@ import {
 } from '@/components/ui/table';
 import { AlertCircle, ListChecks } from 'lucide-react';
 import type { ExecutionLogResponse } from '../types';
-import { mapActionToSpanish } from '../utils/mappers';
+import {
+  formatConfidencePercentage,
+  getConfidenceBadgeColor,
+  mapActionToSpanish,
+} from '../utils/mappers';
 
 interface ExecutionLogsListProps {
   logs: ExecutionLogResponse[];
 }
 
-const getConfidenceColor = (confidence: number | null) => {
-  if (confidence === null) return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
-  if (confidence >= 0.9) return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-  if (confidence >= 0.7) return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
-  return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
-};
+const getActionTone = (actionTaken: string | null) => {
+  if (!actionTaken) return 'text-muted-foreground';
 
-const formatConfidence = (confidence: number | null) => {
-  if (confidence === null) return '-';
-  return `${confidence}%`;
+  if (actionTaken === 'No action (passive step)' || actionTaken.startsWith('Sent DTMF:')) {
+    return 'text-green-900 bg-green-100 dark:bg-green-950 dark:text-green-200';
+  }
+
+  if (
+    actionTaken.includes('error') ||
+    actionTaken.includes('Error') ||
+    actionTaken.includes('timeout') ||
+    actionTaken.includes('Timeout') ||
+    actionTaken.includes('Failed') ||
+    actionTaken.includes('stagnated') ||
+    actionTaken.includes('silence')
+  ) {
+    return 'text-red-900 bg-red-100 dark:bg-red-950 dark:text-red-200';
+  }
+
+  return 'text-foreground bg-black/5 dark:bg-white/5';
 };
 
 export const ExecutionLogsList = ({ logs }: ExecutionLogsListProps) => {
@@ -96,15 +110,17 @@ export const ExecutionLogsList = ({ logs }: ExecutionLogsListProps) => {
 
                   {/* Confianza */}
                   <TableCell className="text-center">
-                    <Badge className={getConfidenceColor(log.confidence_score)}>
-                      {formatConfidence(log.confidence_score)}
+                    <Badge className={getConfidenceBadgeColor(log.confidence_score)}>
+                      {formatConfidencePercentage(log.confidence_score)}
                     </Badge>
                   </TableCell>
 
                   {/* Acción Ejecutada */}
                   <TableCell>
                     {log.action_taken ? (
-                      <span className="text-xs bg-black/5 dark:bg-white/5 px-2 py-1 rounded block w-fit">
+                      <span
+                        className={`text-xs px-2 py-1 rounded block w-fit ${getActionTone(log.action_taken)}`}
+                      >
                         {mapActionToSpanish(log.action_taken)}
                       </span>
                     ) : (

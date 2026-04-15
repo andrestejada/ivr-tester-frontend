@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { AlertCircle, Loader2, Phone } from 'lucide-react';
@@ -22,7 +22,7 @@ export function NewExecutionTab({ architecture, testCaseId, testCase }: NewExecu
   const [activeExecutionId, setActiveExecutionId] = useState<string | null>(null);
 
   // Hook para crear/ejecutar test case
-  const { execute, isLoading: isExecuting, errorMessage } = useCreateTestExecution(
+  const { execute, isLoading: isExecuting, errorMessage, reset: resetExecutionMutation } = useCreateTestExecution(
     architecture?.id || null,
     testCaseId
   );
@@ -30,12 +30,19 @@ export function NewExecutionTab({ architecture, testCaseId, testCase }: NewExecu
   // Hook para suscribirse a eventos WebSocket en tiempo real
   const wsResult = useExecutionWebSocket(activeExecutionId, testCase?.flow_script || []);
 
+  useEffect(() => {
+    // Cambiar arquitectura/caso invalida cualquier ejecución activa previa.
+    setActiveExecutionId(null);
+    resetExecutionMutation();
+  }, [architecture?.id, testCaseId, resetExecutionMutation]);
+
   const isReady = !!architecture && !!testCaseId && !!testCase;
 
   const handleExecuteClick = async () => {
     if (!isReady || !architecture) return;
 
     try {
+      resetExecutionMutation();
       console.log('[NewExecutionTab] Iniciando ejecuci\u00f3n de test case...');
       // Ejecutar test case
       const response: ExecuteTestCaseResponse = await execute();
@@ -61,6 +68,7 @@ export function NewExecutionTab({ architecture, testCaseId, testCase }: NewExecu
    */
   const handleNewExecution = () => {
     setActiveExecutionId(null);
+    resetExecutionMutation();
   };
 
   // Mostrar estado de no listo

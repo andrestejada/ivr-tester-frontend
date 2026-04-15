@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { mapActionToSpanish } from '../mappers';
+import {
+  formatConfidencePercentage,
+  getConfidenceBadgeColor,
+  mapActionToSpanish,
+  mapFailureReasonToSpanish,
+  normalizeConfidencePercentage,
+} from '../mappers';
 
 describe('mapActionToSpanish', () => {
   // Caso 1: Sin acción (paso pasivo)
@@ -57,6 +63,20 @@ describe('mapActionToSpanish', () => {
     expect(mapActionToSpanish(unknownValue)).toBe(unknownValue);
   });
 
+  // Caso 9: Stagnation
+  it('mapea razón de stagnation a mensaje amigable', () => {
+    expect(
+      mapActionToSpanish('Step stagnated: no similarity improvement for 8.0s with best_ratio=40.35%')
+    ).toContain('No hubo avance en el reconocimiento');
+  });
+
+  // Caso 10: Step timeout
+  it('mapea razón de timeout de step a mensaje amigable', () => {
+    expect(
+      mapActionToSpanish('Step timeout exceeded: 30.0s >= 30.0s (best_ratio=69.72%)')
+    ).toContain('Se agotó el tiempo de espera del paso');
+  });
+
   // Null o vacío
   it('retorna "-" si el valor es null', () => {
     expect(mapActionToSpanish(null)).toBe('-');
@@ -71,5 +91,29 @@ describe('mapActionToSpanish', () => {
     expect(mapActionToSpanish('DTMF error:  Connection failed  ')).toBe(
       'Error DTMF: Connection failed'
     );
+  });
+});
+
+describe('mapFailureReasonToSpanish', () => {
+  it('retorna mensaje genérico amigable para fallback', () => {
+    expect(mapFailureReasonToSpanish('Unknown backend failure')).toContain('La prueba falló en este paso');
+  });
+});
+
+describe('confidence helpers', () => {
+  it('normaliza valores 0-1 a porcentaje', () => {
+    expect(normalizeConfidencePercentage(0.4035)).toBeCloseTo(40.35, 2);
+  });
+
+  it('mantiene valores 0-100 sin modificar', () => {
+    expect(normalizeConfidencePercentage(87.48)).toBe(87.48);
+  });
+
+  it('formatea porcentaje con dos decimales', () => {
+    expect(formatConfidencePercentage(40.35)).toBe('40.35%');
+  });
+
+  it('asigna color crítico rojo a confianza baja en step fallido', () => {
+    expect(getConfidenceBadgeColor(20, 'failed')).toContain('red');
   });
 });

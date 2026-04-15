@@ -11,6 +11,18 @@ import type {
 } from '../types';
 import type { FlowStep } from '@/features/test-cases/types';
 
+export interface ResetProgressAction {
+  type: '__reset__';
+  execution_id: string | null;
+  flow_script: FlowStep[];
+}
+
+export type ProgressReducerAction = ExecutionWebSocketEvent | ResetProgressAction;
+
+function isResetProgressAction(action: ProgressReducerAction): action is ResetProgressAction {
+  return (action as ResetProgressAction).type === '__reset__';
+}
+
 /**
  * Estado inicial de progreso para una ejecución
  */
@@ -45,8 +57,13 @@ export function createInitialProgressState(
  */
 export function progressReducer(
   state: ExecutionProgressState,
-  event: ExecutionWebSocketEvent
+  action: ProgressReducerAction
 ): ExecutionProgressState {
+  if (isResetProgressAction(action)) {
+    return createInitialProgressState(action.execution_id || '', action.flow_script || []);
+  }
+
+  const event: ExecutionWebSocketEvent = action;
   console.log(`[Reducer] Procesando evento: ${event.event_type}`, event.data);
 
   switch (event.event_type) {
@@ -183,11 +200,13 @@ export function progressReducer(
 
     case 'execution_finished': {
       const data = event.data as { status: 'PASSED' | 'FAILED'; duration_seconds: number };
+      const genericFailedMessage = 'La prueba finalizó con uno o más pasos fallidos.';
       return {
         ...state,
         global_status: data.status === 'PASSED' ? 'passed' : 'failed',
         duration_seconds: data.duration_seconds,
-        terminal_error_message: data.status === 'PASSED' ? null : state.terminal_error_message,
+        terminal_error_message:
+          data.status === 'PASSED' ? null : state.terminal_error_message || genericFailedMessage,
         is_terminal: true,
       };
     }
@@ -202,7 +221,7 @@ export function progressReducer(
         ...state,
         global_status: 'error',
         duration_seconds: data.duration_seconds,
-        terminal_error_message: data.error_message || 'An unexpected error occurred. Please try again.',
+        terminal_error_message: data.error_message || 'Ocurrió un error inesperado. Intenta de nuevo.',
         is_terminal: true,
       };
     }

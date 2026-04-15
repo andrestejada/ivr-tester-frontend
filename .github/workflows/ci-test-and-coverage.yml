@@ -1,0 +1,80 @@
+name: Test and Coverage
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-coverage:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests with coverage
+        run: |
+          set -o pipefail
+          npm run test:coverage | tee vitest-output.txt
+
+      - name: Collect metrics
+        id: metrics
+        if: always()
+        run: |
+          COVERAGE=$(node -e "
+          const fs = require('fs');
+          try {
+            const report = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf8'));
+            const pct = report?.total?.lines?.pct;
+            if (typeof pct === 'number') {
+              console.log(pct.toFixed(2) + '%');
+            } else {
+              console.log('N/A');
+            }
+          } catch {
+            console.log('N/A');
+          }
+          ")
+
+          echo "coverage=${COVERAGE}" >> "$GITHUB_OUTPUT"
+          echo "result=${{ job.status }}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            coverage
+            vitest-output.txt
+          retention-days: 14
+
+      - name: Job summary
+        if: always()
+        run: |
+          {
+            echo "## Test and Coverage Summary"
+            echo ""
+            echo "| Metric | Value |"
+            echo "| --- | --- |"
+            echo "| Status | ${{ steps.metrics.outputs.result }} |"
+            echo "| Coverage (lines) | ${{ steps.metrics.outputs.coverage }} |"
+            echo "| Artifact | coverage-report |"
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -11,13 +11,14 @@
  * Ubicación: src/hooks/useExecutionWebSocket.ts (hook global, reutilizable en cualquier parte)
  */
 
-import { useEffect, useReducer, useRef, useCallback, useState } from 'react';
+import { useEffect, useMemo, useReducer, useRef, useCallback, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import {
   createInitialProgressState,
   progressReducer,
 } from '@/features/executions/utils/progressReducer';
 import type { ExecutionWebSocketEvent } from '@/features/executions/types';
+import type { FlowStep } from '@/features/test-cases/types';
 
 /**
  * Hook para suscribirse a eventos WebSocket de una ejecución en tiempo real.
@@ -32,10 +33,11 @@ import type { ExecutionWebSocketEvent } from '@/features/executions/types';
  *   // Mostrar resultado final
  * }
  */
-export function useExecutionWebSocket(executionId: string | null, flowScript: any[] = []) {
+export function useExecutionWebSocket(executionId: string | null, flowScript: FlowStep[] = []) {
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const shouldReconnectRef = useRef(true);
+  const flowScriptSnapshot = useMemo(() => JSON.stringify(flowScript ?? []), [flowScript]);
 
   // Estado de progreso de ejecución
   const [progressState, dispatchProgressEvent] = useReducer(
@@ -52,6 +54,14 @@ export function useExecutionWebSocket(executionId: string | null, flowScript: an
 
   // Contador de reconexiones para backoff exponencial
   const reconnectCountRef = useRef(0);
+
+  useEffect(() => {
+    dispatchProgressEvent({
+      type: '__reset__',
+      execution_id: executionId,
+      flow_script: JSON.parse(flowScriptSnapshot) as FlowStep[],
+    });
+  }, [executionId, flowScriptSnapshot]);
 
   /**
    * Calcula delay de reconexión con backoff exponencial (1s, 2s, 4s, 8s, max 30s)

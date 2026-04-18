@@ -81,48 +81,59 @@ jobs:
             // Keep default values when vitest output is missing.
           }
 
-          let lines = 'N/A';
-          let statements = 'N/A';
-          let branches = 'N/A';
-          let functions = 'N/A';
+          let coverage = 'N/A';
+          let coveredLines = 'N/A';
+          let missedLines = 'N/A';
+          let measurableLines = 'N/A';
           let filesMeasured = '0';
 
           try {
             const report = JSON.parse(fs.readFileSync(coverageSummaryPath, 'utf8'));
             const total = report.total || {};
+            const totalLines = total.lines || {};
 
-            lines = toPercent(total.lines);
-            statements = toPercent(total.statements);
-            branches = toPercent(total.branches);
-            functions = toPercent(total.functions);
+            const linesTotal = Number(totalLines.total || 0);
+            const linesCovered = Number(totalLines.covered || 0);
+            const linesMissed = Math.max(linesTotal - linesCovered, 0);
+
+            coverage = toPercent(totalLines);
+            coveredLines = String(linesCovered);
+            missedLines = String(linesMissed);
+            measurableLines = String(linesTotal);
 
             const rows = Object.entries(report)
               .filter(([key]) => key !== 'total')
               .map(([file, metrics]) => {
                 const normalizedFile = file.replace(/\\/g, '/');
+                const lines = metrics.lines || {};
+                const measurable = Number(lines.total || 0);
+                const covered = Number(lines.covered || 0);
+                const missed = Math.max(measurable - covered, 0);
+                const pct = measurable > 0 ? (covered / measurable) * 100.0 : 0.0;
+
                 return {
                   file: normalizedFile,
-                  linesPct: typeof metrics.lines?.pct === 'number' ? metrics.lines.pct : 0,
-                  lines: toPercent(metrics.lines),
-                  statements: toPercent(metrics.statements),
-                  branches: toPercent(metrics.branches),
-                  functions: toPercent(metrics.functions),
+                  coverage: `${pct.toFixed(2)}%`,
+                  covered,
+                  missed,
+                  measurable,
+                  pct,
                 };
               })
-              .sort((a, b) => a.linesPct - b.linesPct || a.file.localeCompare(b.file));
+              .sort((a, b) => a.pct - b.pct || a.file.localeCompare(b.file));
 
             filesMeasured = String(rows.length);
 
             const tableLines = [
               '### Coverage by File',
               '',
-              '| File | Lines | Statements | Branches | Functions |',
+              '| File | Coverage | Covered | Missed | Measurable |',
               '| --- | ---: | ---: | ---: | ---: |',
             ];
 
             for (const row of rows) {
               tableLines.push(
-                `| ${row.file} | ${row.lines} | ${row.statements} | ${row.branches} | ${row.functions} |`
+                `| ${row.file} | ${row.coverage} | ${row.covered} | ${row.missed} | ${row.measurable} |`
               );
             }
 
@@ -135,10 +146,10 @@ jobs:
             );
           }
 
-          writeOutput('coverage_lines', lines);
-          writeOutput('coverage_statements', statements);
-          writeOutput('coverage_branches', branches);
-          writeOutput('coverage_functions', functions);
+          writeOutput('coverage', coverage);
+          writeOutput('covered_lines', coveredLines);
+          writeOutput('missed_lines', missedLines);
+          writeOutput('measurable_lines', measurableLines);
           writeOutput('files_measured', filesMeasured);
           writeOutput('test_files', testFiles);
           writeOutput('tests', tests);
@@ -167,14 +178,14 @@ jobs:
             echo "| Metric | Value |"
             echo "| --- | --- |"
             echo "| Status | ${{ steps.metrics.outputs.result }} |"
+            echo "| Coverage (business logic lines) | ${{ steps.metrics.outputs.coverage }} |"
+            echo "| Covered lines | ${{ steps.metrics.outputs.covered_lines }} |"
+            echo "| Missed lines | ${{ steps.metrics.outputs.missed_lines }} |"
+            echo "| Measurable lines | ${{ steps.metrics.outputs.measurable_lines }} |"
+            echo "| Files measured | ${{ steps.metrics.outputs.files_measured }} |"
             echo "| Test files | ${{ steps.metrics.outputs.test_files }} |"
             echo "| Tests | ${{ steps.metrics.outputs.tests }} |"
             echo "| Duration | ${{ steps.metrics.outputs.duration }} |"
-            echo "| Lines coverage | ${{ steps.metrics.outputs.coverage_lines }} |"
-            echo "| Statements coverage | ${{ steps.metrics.outputs.coverage_statements }} |"
-            echo "| Branches coverage | ${{ steps.metrics.outputs.coverage_branches }} |"
-            echo "| Functions coverage | ${{ steps.metrics.outputs.coverage_functions }} |"
-            echo "| Files measured | ${{ steps.metrics.outputs.files_measured }} |"
             echo "| Artifact | coverage-report |"
             echo ""
             echo "Use the artifact **coverage-report** to inspect detailed logs and the HTML coverage report."

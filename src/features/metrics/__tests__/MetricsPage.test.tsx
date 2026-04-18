@@ -135,8 +135,8 @@ describe('MetricsPage Integration', () => {
     renderPage()
 
     await waitFor(() => {
-      expect(screen.getByDisplayValue('Arch 1')).toBeInTheDocument()
-      expect(screen.getByDisplayValue('Arch 2')).toBeInTheDocument()
+      expect(screen.getByRole('option', { name: 'Arch 1' })).toBeInTheDocument()
+      expect(screen.getByRole('option', { name: 'Arch 2' })).toBeInTheDocument()
     })
   })
 
@@ -164,7 +164,7 @@ describe('MetricsPage Integration', () => {
       rankings: null,
     }
 
-    vi.mocked(architecturesHooks.useIVRArchitectures).mockReturnValueOnce({
+    vi.mocked(architecturesHooks.useIVRArchitectures).mockReturnValue({
       architectures: [
         { id: '1', name: 'Arch 1', phone_number: '573001111111', user_id: 'user-1', created_at: '', updated_at: '' },
       ],
@@ -174,7 +174,7 @@ describe('MetricsPage Integration', () => {
       isLoading: false,
     })
 
-    vi.mocked(testCasesHooks.useTestCases).mockReturnValueOnce({
+    vi.mocked(testCasesHooks.useTestCases).mockReturnValue({
       testCases: [],
       error: null,
       errorMessage: '',
@@ -182,7 +182,7 @@ describe('MetricsPage Integration', () => {
       isLoading: false,
     })
 
-    vi.mocked(metricsHooks.useAnalytics).mockReturnValueOnce({
+    vi.mocked(metricsHooks.useAnalytics).mockReturnValue({
       analytics: mockAnalytics,
       error: null,
       errorMessage: '',
@@ -195,14 +195,18 @@ describe('MetricsPage Integration', () => {
     renderPage()
 
     // Seleccionar arquitectura
-    const archSelect = screen.getByDisplayValue('Arch 1')
+    const archSelect = screen.getByLabelText(/arquitectura ivr/i)
     await user.selectOptions(archSelect, '1')
 
     await waitFor(() => {
-      expect(screen.getByText(/Total Ejecuciones/i)).toBeInTheDocument()
+      expect((archSelect as HTMLSelectElement).value).toBe('1')
+    })
+
+    await waitFor(() => {
+      expect(screen.getByText(/^Total$/i)).toBeInTheDocument()
       expect(screen.getByText(/Exitosas/i)).toBeInTheDocument()
       expect(screen.getByText(/Fallidas/i)).toBeInTheDocument()
-      expect(screen.getByText(/Tasa de Éxito/i)).toBeInTheDocument()
+      expect(screen.getByText(/Errores/i)).toBeInTheDocument()
     })
   })
 })

@@ -38,22 +38,113 @@ jobs:
         id: metrics
         if: always()
         run: |
-          COVERAGE=$(node -e "
+          node - <<'NODE'
           const fs = require('fs');
+
+          const outputFile = process.env.GITHUB_OUTPUT;
+          const vitestOutputPath = 'vitest-output.txt';
+          const coverageSummaryPath = 'coverage/coverage-summary.json';
+          const coverageFilesTablePath = 'coverage-files-table.md';
+
+          function writeOutput(key, value) {
+            fs.appendFileSync(outputFile, `${key}=${value}\n`, 'utf8');
+          }
+
+          function toPercent(metric) {
+            const pct = metric && typeof metric.pct === 'number' ? metric.pct : null;
+            return pct === null ? 'N/A' : `${pct.toFixed(2)}%`;
+          }
+
+          let testFiles = 'N/A';
+          let tests = 'N/A';
+          let duration = 'N/A';
+
           try {
-            const report = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf8'));
-            const pct = report?.total?.lines?.pct;
-            if (typeof pct === 'number') {
-              console.log(pct.toFixed(2) + '%');
-            } else {
-              console.log('N/A');
+            const rawOutput = fs.readFileSync(vitestOutputPath, 'utf8');
+            const cleanOutput = rawOutput.replace(/\u001b\[[0-9;]*m/g, '');
+
+            const testFilesMatch = cleanOutput.match(/Test Files\s+([^\n\r]+)/i);
+            if (testFilesMatch) {
+              testFiles = testFilesMatch[1].trim();
+            }
+
+            const testsMatch = cleanOutput.match(/Tests\s+([^\n\r]+)/i);
+            if (testsMatch) {
+              tests = testsMatch[1].trim();
+            }
+
+            const durationMatch = cleanOutput.match(/Duration\s+([^\n\r]+)/i);
+            if (durationMatch) {
+              duration = durationMatch[1].trim();
             }
           } catch {
-            console.log('N/A');
+            // Keep default values when vitest output is missing.
           }
-          ")
 
-          echo "coverage=${COVERAGE}" >> "$GITHUB_OUTPUT"
+          let lines = 'N/A';
+          let statements = 'N/A';
+          let branches = 'N/A';
+          let functions = 'N/A';
+          let filesMeasured = '0';
+
+          try {
+            const report = JSON.parse(fs.readFileSync(coverageSummaryPath, 'utf8'));
+            const total = report.total || {};
+
+            lines = toPercent(total.lines);
+            statements = toPercent(total.statements);
+            branches = toPercent(total.branches);
+            functions = toPercent(total.functions);
+
+            const rows = Object.entries(report)
+              .filter(([key]) => key !== 'total')
+              .map(([file, metrics]) => {
+                const normalizedFile = file.replace(/\\/g, '/');
+                return {
+                  file: normalizedFile,
+                  linesPct: typeof metrics.lines?.pct === 'number' ? metrics.lines.pct : 0,
+                  lines: toPercent(metrics.lines),
+                  statements: toPercent(metrics.statements),
+                  branches: toPercent(metrics.branches),
+                  functions: toPercent(metrics.functions),
+                };
+              })
+              .sort((a, b) => a.linesPct - b.linesPct || a.file.localeCompare(b.file));
+
+            filesMeasured = String(rows.length);
+
+            const tableLines = [
+              '### Coverage by File',
+              '',
+              '| File | Lines | Statements | Branches | Functions |',
+              '| --- | ---: | ---: | ---: | ---: |',
+            ];
+
+            for (const row of rows) {
+              tableLines.push(
+                `| ${row.file} | ${row.lines} | ${row.statements} | ${row.branches} | ${row.functions} |`
+              );
+            }
+
+            fs.writeFileSync(coverageFilesTablePath, `${tableLines.join('\n')}\n`, 'utf8');
+          } catch {
+            fs.writeFileSync(
+              coverageFilesTablePath,
+              '### Coverage by File\n\nCoverage details are unavailable because coverage/coverage-summary.json could not be parsed.\n',
+              'utf8'
+            );
+          }
+
+          writeOutput('coverage_lines', lines);
+          writeOutput('coverage_statements', statements);
+          writeOutput('coverage_branches', branches);
+          writeOutput('coverage_functions', functions);
+          writeOutput('files_measured', filesMeasured);
+          writeOutput('test_files', testFiles);
+          writeOutput('tests', tests);
+          writeOutput('duration', duration);
+          NODE
+
           echo "result=${{ job.status }}" >> "$GITHUB_OUTPUT"
 
       - name: Upload artifacts
@@ -64,6 +155,7 @@ jobs:
           path: |
             coverage
             vitest-output.txt
+            coverage-files-table.md
           retention-days: 14
 
       - name: Job summary
@@ -75,6 +167,21 @@ jobs:
             echo "| Metric | Value |"
             echo "| --- | --- |"
             echo "| Status | ${{ steps.metrics.outputs.result }} |"
-            echo "| Coverage (lines) | ${{ steps.metrics.outputs.coverage }} |"
+            echo "| Test files | ${{ steps.metrics.outputs.test_files }} |"
+            echo "| Tests | ${{ steps.metrics.outputs.tests }} |"
+            echo "| Duration | ${{ steps.metrics.outputs.duration }} |"
+            echo "| Lines coverage | ${{ steps.metrics.outputs.coverage_lines }} |"
+            echo "| Statements coverage | ${{ steps.metrics.outputs.coverage_statements }} |"
+            echo "| Branches coverage | ${{ steps.metrics.outputs.coverage_branches }} |"
+            echo "| Functions coverage | ${{ steps.metrics.outputs.coverage_functions }} |"
+            echo "| Files measured | ${{ steps.metrics.outputs.files_measured }} |"
             echo "| Artifact | coverage-report |"
+            echo ""
+            echo "Use the artifact **coverage-report** to inspect detailed logs and the HTML coverage report."
+            echo ""
+            if [ -f coverage-files-table.md ]; then
+              cat coverage-files-table.md
+            else
+              echo "Coverage by file table is unavailable."
+            fi
           } >> "$GITHUB_STEP_SUMMARY"

@@ -23,3 +23,10 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# Test and coverage artifacts
+coverage/
+.nyc_output/
+*.lcov
+vitest-output.txt
+full_test_output.txt

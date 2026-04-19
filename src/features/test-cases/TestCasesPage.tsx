@@ -39,16 +39,6 @@ export function TestCasesPage() {
       {/* Tabs */}
       <div className="flex gap-4 mb-6 flex-wrap">
         <button
-          onClick={() => setActiveTab('list')}
-          className={`px-4 py-2 rounded-md font-medium transition-colors ${
-            activeTab === 'list'
-              ? 'bg-blue-600 text-white'
-              : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-          }`}
-        >
-          Listado ({testCases.length})
-        </button>
-        <button
           onClick={() => setActiveTab('form')}
           className={`px-4 py-2 rounded-md font-medium transition-colors ${
             activeTab === 'form'
@@ -57,6 +47,16 @@ export function TestCasesPage() {
           }`}
         >
           Crear Nueva
+        </button>
+        <button
+          onClick={() => setActiveTab('list')}
+          className={`px-4 py-2 rounded-md font-medium transition-colors ${
+            activeTab === 'list'
+              ? 'bg-blue-600 text-white'
+              : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+          }`}
+        >
+          Listado ({testCases.length})
         </button>
         {selectedTestCaseToEdit && (
           <button

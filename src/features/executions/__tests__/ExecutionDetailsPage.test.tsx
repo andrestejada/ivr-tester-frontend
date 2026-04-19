@@ -142,7 +142,7 @@ describe('ExecutionDetailsPage', () => {
           id: 'tc-2',
           ivr_architecture_id: 'arch-1',
           name: 'TC 2',
-          flow_script: [{ step: 1, listen: 'Texto esperado', action: null }],
+          flow_script: [{ step: 1, listen: 'Texto esperado', action: undefined }],
           created_at: new Date('2026-01-02T09:00:00.000Z').toISOString(),
           ivr_architecture: {
             id: 'arch-1',

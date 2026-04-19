@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle2, XCircle, AlertCircle, Loader, ListChecks } from 'lucide-react';
 import type { ExecutionProgressState, StepProgressStatus } from '../types';
+import { RealtimeTranscriptChat } from './RealtimeTranscriptChat';
 import {
   formatConfidencePercentage,
   getConfidenceBadgeColor,
@@ -165,6 +166,8 @@ export function ExecutionRealtimeProgress({ state, connectionStatus }: Execution
             )}
           </div>
 
+          <RealtimeTranscriptChat state={state} />
+
           {/* Terminal Error Message */}
           {terminalMessage && (
             <div className="mt-4 p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg flex gap-3">
@@ -248,19 +251,6 @@ export function ExecutionRealtimeProgress({ state, connectionStatus }: Execution
         </div>
       </div>
 
-      {/* Accumulated Transcript (if available) */}
-      {state.accumulated_transcript && (
-        <Card className="border-dashed">
-          <CardHeader>
-            <CardTitle className="text-base">Transcripción Completa</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-foreground whitespace-pre-wrap wrap-break-word max-h-48 overflow-y-auto">
-              {state.accumulated_transcript}
-            </p>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

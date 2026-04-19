@@ -66,4 +66,35 @@ describe('progressReducer reset behavior', () => {
     expect(resetState.steps[0].expected_text).toBe('Opción dos');
     expect(resetState.steps[0].status).toBe('pending');
   });
+
+  it('acumula transcript_partial y transcript_final aunque no exista step running', () => {
+    const state = createInitialProgressState('exec-1', flowScriptA);
+
+    const afterPartial = progressReducer(
+      state,
+      createEvent('transcript_partial', { text: 'hola ', is_final: false })
+    );
+    expect(afterPartial.accumulated_transcript).toBe('hola ');
+
+    const afterFinal = progressReducer(
+      afterPartial,
+      createEvent('transcript_final', { text: 'mundo', is_final: true })
+    );
+    expect(afterFinal.accumulated_transcript).toBe('hola mundo');
+  });
+
+  it('inserta espacio entre mensajes cuando los eventos llegan sin separación', () => {
+    const state = createInitialProgressState('exec-1', flowScriptA);
+
+    const afterPartial = progressReducer(
+      state,
+      createEvent('transcript_partial', { text: 'hola', is_final: false })
+    );
+    const afterFinal = progressReducer(
+      afterPartial,
+      createEvent('transcript_final', { text: 'mundo', is_final: true })
+    );
+
+    expect(afterFinal.accumulated_transcript).toBe('hola mundo');
+  });
 });

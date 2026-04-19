@@ -23,6 +23,25 @@ function isResetProgressAction(action: ProgressReducerAction): action is ResetPr
   return (action as ResetProgressAction).type === '__reset__';
 }
 
+function appendTranscriptChunk(accumulated: string, chunk: string): string {
+  if (!chunk) {
+    return accumulated;
+  }
+
+  if (!accumulated) {
+    return chunk;
+  }
+
+  const endsWithWhitespace = /\s$/.test(accumulated);
+  const startsWithWhitespace = /^\s/.test(chunk);
+
+  if (endsWithWhitespace || startsWithWhitespace) {
+    return accumulated + chunk;
+  }
+
+  return `${accumulated} ${chunk}`;
+}
+
 /**
  * Estado inicial de progreso para una ejecución
  */
@@ -75,9 +94,15 @@ export function progressReducer(
 
     case 'transcript_partial': {
       const data = event.data as { text: string; is_final: false };
+      const appendedTranscript = appendTranscriptChunk(state.accumulated_transcript, data.text);
       // Buscar el step en estado 'running' (no ya procesado)
       const activeStepIdx = state.steps.findIndex((s) => s.status === 'running');
-      if (activeStepIdx === -1) return state;
+      if (activeStepIdx === -1) {
+        return {
+          ...state,
+          accumulated_transcript: appendedTranscript,
+        };
+      }
 
       const newSteps = [...state.steps];
       newSteps[activeStepIdx] = {
@@ -89,15 +114,21 @@ export function progressReducer(
       return {
         ...state,
         steps: newSteps,
-        accumulated_transcript: state.accumulated_transcript + data.text,
+        accumulated_transcript: appendedTranscript,
       };
     }
 
     case 'transcript_final': {
       const data = event.data as { text: string; is_final: true };
+      const appendedTranscript = appendTranscriptChunk(state.accumulated_transcript, data.text);
       // Buscar el step en estado 'running' (no ya procesado)
       const activeStepIdx = state.steps.findIndex((s) => s.status === 'running');
-      if (activeStepIdx === -1) return state;
+      if (activeStepIdx === -1) {
+        return {
+          ...state,
+          accumulated_transcript: appendedTranscript,
+        };
+      }
 
       const newSteps = [...state.steps];
       newSteps[activeStepIdx] = {
@@ -109,7 +140,7 @@ export function progressReducer(
       return {
         ...state,
         steps: newSteps,
-        accumulated_transcript: state.accumulated_transcript + data.text,
+        accumulated_transcript: appendedTranscript,
       };
     }
 

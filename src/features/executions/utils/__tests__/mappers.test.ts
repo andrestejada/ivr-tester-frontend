@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   formatConfidencePercentage,
   getConfidenceBadgeColor,
+  isStepFailureAction,
   mapActionToSpanish,
   mapFailureReasonToSpanish,
   normalizeConfidencePercentage,
@@ -97,6 +98,24 @@ describe('mapActionToSpanish', () => {
 describe('mapFailureReasonToSpanish', () => {
   it('retorna mensaje genérico amigable para fallback', () => {
     expect(mapFailureReasonToSpanish('Unknown backend failure')).toContain('La prueba falló en este paso');
+  });
+});
+
+describe('isStepFailureAction', () => {
+  it('retorna false para acciones exitosas', () => {
+    expect(isStepFailureAction('Sent DTMF: 1')).toBe(false);
+    expect(isStepFailureAction('No action (passive step)')).toBe(false);
+    expect(isStepFailureAction('No action (passive step - timeout fallback accepted: 84.38%)')).toBe(
+      false
+    );
+  });
+
+  it('retorna true para acciones de fallo conocidas', () => {
+    expect(isStepFailureAction('Failed text match')).toBe(true);
+    expect(isStepFailureAction('Step timeout exceeded: 30.0s >= 30.0s (best_ratio=69.72%)')).toBe(
+      true
+    );
+    expect(isStepFailureAction('DTMF error: Connection timeout')).toBe(true);
   });
 });
 

@@ -151,6 +151,7 @@ export interface ExecutionLogResponse {
   step_number: number;
   expected_text: string | null;
   actual_transcription: string | null;
+  matched_excerpt: string | null;
   confidence_score: number | null;
   action_taken: string | null;
   created_at: string; // ISO 8601 datetime

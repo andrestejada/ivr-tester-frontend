@@ -15,6 +15,7 @@ import type { ExecutionLogResponse } from '../types';
 import {
   formatConfidencePercentage,
   getConfidenceBadgeColor,
+  isStepFailureAction,
   mapActionToSpanish,
 } from '../utils/mappers';
 
@@ -22,22 +23,16 @@ interface ExecutionLogsListProps {
   logs: ExecutionLogResponse[];
 }
 
+const NO_MATCH_MESSAGE = 'No se encontraron coincidencias. Revisa el texto ingresado';
+
 const getActionTone = (actionTaken: string | null) => {
   if (!actionTaken) return 'text-muted-foreground';
 
-  if (actionTaken === 'No action (passive step)' || actionTaken.startsWith('Sent DTMF:')) {
+  if (actionTaken.startsWith('No action (passive step') || actionTaken.startsWith('Sent DTMF:')) {
     return 'text-green-900 bg-green-100 dark:bg-green-950 dark:text-green-200';
   }
 
-  if (
-    actionTaken.includes('error') ||
-    actionTaken.includes('Error') ||
-    actionTaken.includes('timeout') ||
-    actionTaken.includes('Timeout') ||
-    actionTaken.includes('Failed') ||
-    actionTaken.includes('stagnated') ||
-    actionTaken.includes('silence')
-  ) {
+  if (isStepFailureAction(actionTaken)) {
     return 'text-red-900 bg-red-100 dark:bg-red-950 dark:text-red-200';
   }
 
@@ -99,7 +94,13 @@ export const ExecutionLogsList = ({ logs }: ExecutionLogsListProps) => {
 
                   {/* Transcripción Real */}
                   <TableCell>
-                    {log.actual_transcription ? (
+                    {isStepFailureAction(log.action_taken) ? (
+                      <span className="text-sm text-red-700 dark:text-red-300">{NO_MATCH_MESSAGE}</span>
+                    ) : log.matched_excerpt ? (
+                      <span className="text-sm font-mono text-foreground">
+                        "{log.matched_excerpt}"
+                      </span>
+                    ) : log.actual_transcription ? (
                       <span className="text-sm font-mono text-foreground">
                         "{log.actual_transcription}"
                       </span>

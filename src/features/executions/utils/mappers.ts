@@ -111,6 +111,45 @@ export function mapFailureReasonToSpanish(reason: string | null): string {
 }
 
 /**
+ * Clasifica si la acción registrada corresponde a un paso fallido.
+ */
+export function isStepFailureAction(actionTaken: string | null): boolean {
+  if (!actionTaken) return false;
+
+  if (actionTaken.startsWith('Sent DTMF:')) return false;
+  if (actionTaken.startsWith('No action (passive step')) return false;
+
+  if (
+    actionTaken === 'Failed text match' ||
+    actionTaken === 'Timeout waiting for audio' ||
+    actionTaken === 'No transcription received' ||
+    actionTaken === 'Call session ended before completing step' ||
+    actionTaken.includes('IVR repeated menu without matching expected step')
+  ) {
+    return true;
+  }
+
+  if (
+    actionTaken.startsWith('DTMF error:') ||
+    actionTaken.startsWith('ASR connect error:') ||
+    actionTaken.startsWith('Step timeout exceeded:') ||
+    actionTaken.startsWith('Step stagnated:') ||
+    actionTaken.startsWith('Extreme caller silence:')
+  ) {
+    return true;
+  }
+
+  const lowered = actionTaken.toLowerCase();
+  return (
+    lowered.includes('error') ||
+    lowered.includes('failed') ||
+    lowered.includes('timeout') ||
+    lowered.includes('stagnated') ||
+    lowered.includes('silence')
+  );
+}
+
+/**
  * Mapea el valor de action_taken del backend a una etiqueta legible en español
  * @param actionTaken - Valor crudo desde el backend (puede ser null)
  * @returns Etiqueta en español o el valor original si no hay mapeo

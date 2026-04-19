@@ -103,6 +103,7 @@ describe('ExecutionDetailsPage', () => {
             step_number: 1,
             expected_text: 'Hola',
             actual_transcription: 'Hola',
+            matched_excerpt: 'Hola',
             confidence_score: 98.56,
             action_taken: 'Sent DTMF: 1',
             created_at: new Date('2026-01-01T10:00:01.000Z').toISOString(),
@@ -123,6 +124,63 @@ describe('ExecutionDetailsPage', () => {
       expect(screen.getByText(/ivr test/i)).toBeInTheDocument();
       expect(screen.getByText(/98.56%/i)).toBeInTheDocument();
       expect(screen.getAllByText(/hola/i).length).toBeGreaterThanOrEqual(2);
+    });
+  });
+
+  it('muestra mensaje de no coincidencia cuando el step falla', async () => {
+    mockUseTestExecutionDetails.mockReturnValue({
+      error: null,
+      executionDetails: {
+        id: 'execution-2',
+        test_case_id: 'tc-2',
+        status: 'FAILED',
+        duration_seconds: 21,
+        provider_call_sid: 'CS456',
+        executed_at: new Date('2026-01-02T10:00:00.000Z').toISOString(),
+        full_call_transcript: null,
+        test_case: {
+          id: 'tc-2',
+          ivr_architecture_id: 'arch-1',
+          name: 'TC 2',
+          flow_script: [{ step: 1, listen: 'Texto esperado', action: null }],
+          created_at: new Date('2026-01-02T09:00:00.000Z').toISOString(),
+          ivr_architecture: {
+            id: 'arch-1',
+            user_id: 'user-1',
+            name: 'IVR Test',
+            phone_number: '+123456789',
+            provider: 'twilio',
+            description: 'desc',
+            created_at: new Date('2026-01-01T08:00:00.000Z').toISOString(),
+          },
+        },
+        logs: [
+          {
+            id: 'log-2',
+            execution_id: 'execution-2',
+            step_number: 1,
+            expected_text: 'Texto esperado',
+            actual_transcription: 'texto totalmente distinto',
+            matched_excerpt: null,
+            confidence_score: 32.11,
+            action_taken: 'Failed text match',
+            created_at: new Date('2026-01-02T10:00:01.000Z').toISOString(),
+          },
+        ],
+      },
+      isLoading: false,
+      isError: false,
+      errorMessage: '',
+      refetch: vi.fn(),
+    });
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('No se encontraron coincidencias. Revisa el texto ingresado')
+      ).toBeInTheDocument();
+      expect(screen.queryByText(/texto totalmente distinto/i)).not.toBeInTheDocument();
     });
   });
 });

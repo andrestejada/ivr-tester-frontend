@@ -5,6 +5,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal } from 'lucide-react';
@@ -14,9 +15,10 @@ interface ArchitectureTableProps {
   architectures: IVRArchitecture[];
   isLoading: boolean;
   onEdit?: (architecture: IVRArchitecture) => void;
+  onDelete?: (architecture: IVRArchitecture) => void;
 }
 
-export function ArchitectureTable({ architectures, isLoading, onEdit }: ArchitectureTableProps) {
+export function ArchitectureTable({ architectures, isLoading, onEdit, onDelete }: ArchitectureTableProps) {
   if (isLoading) {
     return (
       <Card className="p-6">
@@ -71,6 +73,17 @@ export function ArchitectureTable({ architectures, isLoading, onEdit }: Architec
                       <DropdownMenuItem onClick={() => onEdit?.(arch)}>
                         Editar
                       </DropdownMenuItem>
+                      {onDelete ? (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            variant="destructive"
+                            onClick={() => onDelete(arch)}
+                          >
+                            Eliminar
+                          </DropdownMenuItem>
+                        </>
+                      ) : null}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </td>

@@ -23,3 +23,7 @@ export async function updateIVRArchitecture(
   );
   return response.data;
 }
+
+export async function deleteIVRArchitecture(architectureId: string): Promise<void> {
+  await httpClient.delete(`/api/v1/ivr-architectures/${architectureId}`);
+}

@@ -5,12 +5,14 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { TestCase } from './types';
 
 export function createColumns(
-  onEdit?: (testCase: TestCase) => void
+  onEdit?: (testCase: TestCase) => void,
+  onDelete?: (testCase: TestCase) => void
 ): ColumnDef<TestCase>[] {
   return [
     {
@@ -75,6 +77,17 @@ export function createColumns(
               <DropdownMenuItem onClick={() => onEdit?.(testCase)}>
                 Editar
               </DropdownMenuItem>
+              {onDelete ? (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onClick={() => onDelete(testCase)}
+                  >
+                    Eliminar
+                  </DropdownMenuItem>
+                </>
+              ) : null}
             </DropdownMenuContent>
           </DropdownMenu>
         );

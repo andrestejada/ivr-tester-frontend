@@ -9,10 +9,17 @@ interface TestCaseTableProps {
   isLoading: boolean;
   isEmpty: boolean;
   onEdit?: (testCase: TestCase) => void;
+  onDelete?: (testCase: TestCase) => void;
 }
 
-export function TestCaseTable({ testCases, isLoading, isEmpty, onEdit }: TestCaseTableProps) {
-  const columns = createColumns(onEdit);
+export function TestCaseTable({
+  testCases,
+  isLoading,
+  isEmpty,
+  onEdit,
+  onDelete,
+}: TestCaseTableProps) {
+  const columns = createColumns(onEdit, onDelete);
 
   return (
     <DataTable

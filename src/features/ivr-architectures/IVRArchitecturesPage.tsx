@@ -1,14 +1,18 @@
 import { useState } from 'react';
-import { useIVRArchitectures } from './hooks';
+import { useDeleteIVRArchitecture, useIVRArchitectures } from './hooks';
 import { CreateIVRArchitectureForm } from './CreateIVRArchitectureForm';
 import { UpdateIVRArchitectureForm } from './UpdateIVRArchitectureForm';
 import { ArchitectureTable } from './ArchitectureTable';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import type { IVRArchitecture } from './types';
 
 export function IVRArchitecturesPage() {
   const [activeTab, setActiveTab] = useState<'form' | 'list' | 'edit'>('form');
   const [selectedArchitectureToEdit, setSelectedArchitectureToEdit] = useState<IVRArchitecture | null>(null);
+  const [selectedArchitectureToDelete, setSelectedArchitectureToDelete] = useState<IVRArchitecture | null>(null);
+  const [deleteError, setDeleteError] = useState('');
   const { architectures, isLoading } = useIVRArchitectures();
+  const { remove, isLoading: isDeleting, errorMessage: deleteErrorMessage } = useDeleteIVRArchitecture();
 
   const handleEditArchitecture = (architecture: IVRArchitecture) => {
     setSelectedArchitectureToEdit(architecture);
@@ -18,6 +22,29 @@ export function IVRArchitecturesPage() {
   const handleUpdateSuccess = () => {
     setSelectedArchitectureToEdit(null);
     setActiveTab('list');
+  };
+
+  const handleDeleteArchitecture = (architecture: IVRArchitecture) => {
+    setDeleteError('');
+    setSelectedArchitectureToDelete(architecture);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedArchitectureToDelete) {
+      return;
+    }
+
+    setDeleteError('');
+    try {
+      await remove(selectedArchitectureToDelete.id);
+      if (selectedArchitectureToEdit?.id === selectedArchitectureToDelete.id) {
+        setSelectedArchitectureToEdit(null);
+      }
+      setActiveTab('list');
+      setSelectedArchitectureToDelete(null);
+    } catch {
+      setDeleteError(deleteErrorMessage || 'No se pudo eliminar la arquitectura.');
+    }
   };
 
   return (
@@ -54,6 +81,7 @@ export function IVRArchitecturesPage() {
             architectures={architectures} 
             isLoading={isLoading}
             onEdit={handleEditArchitecture}
+            onDelete={handleDeleteArchitecture}
           />
         )}
         {activeTab === 'edit' && selectedArchitectureToEdit && (
@@ -63,6 +91,21 @@ export function IVRArchitecturesPage() {
           />
         )}
       </div>
+
+      <ConfirmationDialog
+        open={!!selectedArchitectureToDelete}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedArchitectureToDelete(null);
+            setDeleteError('');
+          }
+        }}
+        title="Eliminar arquitectura"
+        description={`Si continúas, se eliminarán en cascada todos los test cases, ejecuciones y datos relacionados de ${selectedArchitectureToDelete?.name ?? 'esta arquitectura'}. Esta acción no se puede deshacer.`}
+        onConfirm={handleConfirmDelete}
+        isLoading={isDeleting}
+        errorMessage={deleteError}
+      />
     </div>
   );
 }

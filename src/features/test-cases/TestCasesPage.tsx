@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useIVRArchitectures } from '@/features/ivr-architectures/hooks';
-import { useTestCases } from './hooks';
+import { useDeleteTestCase, useTestCases } from './hooks';
 import { TestCaseTable } from './TestCaseTable';
 import { CreateTestCaseForm } from './CreateTestCaseForm';
 import { UpdateTestCaseForm } from './UpdateTestCaseForm';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { Card } from '@/components/ui/card';
 import type { TestCase } from './types';
 
@@ -11,9 +12,16 @@ export function TestCasesPage() {
   const [selectedArchitectureId, setSelectedArchitectureId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'list' | 'form' | 'edit'>('form');
   const [selectedTestCaseToEdit, setSelectedTestCaseToEdit] = useState<TestCase | null>(null);
+  const [selectedTestCaseToDelete, setSelectedTestCaseToDelete] = useState<TestCase | null>(null);
+  const [deleteError, setDeleteError] = useState('');
 
   const { architectures, isLoading: loadingArchitectures } = useIVRArchitectures();
   const { testCases, isLoading: loadingTestCases } = useTestCases(selectedArchitectureId);
+  const {
+    remove,
+    isLoading: isDeleting,
+    errorMessage: deleteErrorMessage,
+  } = useDeleteTestCase(selectedArchitectureId);
 
   const selectedArchitecture = architectures.find((arch) => arch.id === selectedArchitectureId);
 
@@ -25,6 +33,29 @@ export function TestCasesPage() {
   const handleUpdateSuccess = () => {
     setSelectedTestCaseToEdit(null);
     setActiveTab('list');
+  };
+
+  const handleDeleteTestCase = (testCase: TestCase) => {
+    setDeleteError('');
+    setSelectedTestCaseToDelete(testCase);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedTestCaseToDelete || !selectedArchitectureId) {
+      return;
+    }
+
+    setDeleteError('');
+    try {
+      await remove(selectedTestCaseToDelete.id);
+      if (selectedTestCaseToEdit?.id === selectedTestCaseToDelete.id) {
+        setSelectedTestCaseToEdit(null);
+      }
+      setActiveTab('list');
+      setSelectedTestCaseToDelete(null);
+    } catch {
+      setDeleteError(deleteErrorMessage || 'No se pudo eliminar el caso de prueba.');
+    }
   };
 
   return (
@@ -97,6 +128,7 @@ export function TestCasesPage() {
           isLoading={loadingTestCases}
           isEmpty={testCases.length === 0}
           onEdit={handleEditTestCase}
+          onDelete={handleDeleteTestCase}
         />
       )}
 
@@ -143,6 +175,21 @@ export function TestCasesPage() {
           onSuccess={handleUpdateSuccess}
         />
       )}
+
+      <ConfirmationDialog
+        open={!!selectedTestCaseToDelete}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedTestCaseToDelete(null);
+            setDeleteError('');
+          }
+        }}
+        title="Eliminar caso de prueba"
+        description={`Si continúas, se eliminarán en cascada las ejecuciones y logs relacionados de ${selectedTestCaseToDelete?.name ?? 'este caso de prueba'}. Esta acción no se puede deshacer.`}
+        onConfirm={handleConfirmDelete}
+        isLoading={isDeleting}
+        errorMessage={deleteError}
+      />
     </div>
   );
 }

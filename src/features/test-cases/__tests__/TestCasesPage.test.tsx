@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -30,18 +30,31 @@ vi.mock('../UpdateTestCaseForm', () => ({
   ),
 }));
 vi.mock('../TestCaseTable', () => ({
-  TestCaseTable: ({ testCases, onEdit }: { testCases: TestCase[]; onEdit?: (testCase: TestCase) => void }) => (
+  TestCaseTable: ({
+    testCases,
+    onEdit,
+    onDelete,
+  }: {
+    testCases: TestCase[];
+    onEdit?: (testCase: TestCase) => void;
+    onDelete?: (testCase: TestCase) => void;
+  }) => (
     <div>
       <p>table-size:{testCases.length}</p>
       <button type="button" onClick={() => onEdit?.(testCases[0])}>
         editar-primer-caso
+      </button>
+      <button type="button" onClick={() => onDelete?.(testCases[0])}>
+        eliminar-primer-caso
       </button>
     </div>
   ),
 }));
 
 const mockUseIVRArchitectures = vi.mocked(ivrHooks.useIVRArchitectures);
+const mockUseDeleteTestCase = vi.mocked(testCasesHooks.useDeleteTestCase);
 const mockUseTestCases = vi.mocked(testCasesHooks.useTestCases);
+const removeMock = vi.fn();
 
 const ARCHITECTURES = [
   {
@@ -101,6 +114,16 @@ function setupDefaultMocks() {
     error: null,
     errorMessage: '',
   }));
+
+  removeMock.mockReset();
+  removeMock.mockResolvedValue(undefined);
+  mockUseDeleteTestCase.mockReturnValue({
+    remove: removeMock,
+    error: null,
+    errorMessage: '',
+    isError: false,
+    isLoading: false,
+  });
 }
 
 function getArchitectureSelector() {
@@ -162,5 +185,22 @@ describe('TestCasesPage', () => {
 
     expect(screen.getByText('table-size:1')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /editando:/i })).not.toBeInTheDocument();
+  });
+
+  it('abre confirmación y elimina caso de prueba', async () => {
+    const user = userEvent.setup();
+    render(<TestCasesPage />);
+
+    await user.selectOptions(getArchitectureSelector(), 'arch-1');
+    await user.click(screen.getByRole('button', { name: /listado/i }));
+    await user.click(screen.getByRole('button', { name: /eliminar-primer-caso/i }));
+
+    expect(screen.getByText(/esta acción no se puede deshacer/i)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^eliminar$/i }));
+
+    await waitFor(() => {
+      expect(removeMock).toHaveBeenCalledWith('tc-1');
+    });
   });
 });

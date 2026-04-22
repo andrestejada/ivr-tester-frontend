@@ -8,6 +8,7 @@ import * as api from '../api';
 vi.mock('../api');
 
 const mockCreateIVRArchitecture = vi.mocked(api.createIVRArchitecture);
+const mockDeleteIVRArchitecture = vi.mocked(api.deleteIVRArchitecture);
 const mockListIVRArchitectures = vi.mocked(api.listIVRArchitectures);
 
 const queryClient = new QueryClient({
@@ -29,6 +30,7 @@ describe('IVRArchitecturesPage Integration', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     queryClient.clear();
+    mockListIVRArchitectures.mockResolvedValue([]);
   });
 
   it('renderiza página con tabs de Crear y Listado', async () => {
@@ -161,6 +163,38 @@ describe('IVRArchitecturesPage Integration', () => {
       expect(
         screen.getByText(/ya existe una arquitectura/i)
       ).toBeInTheDocument();
+    });
+  });
+
+  it('abre confirmación y elimina arquitectura desde el dropdown', async () => {
+    mockListIVRArchitectures.mockResolvedValue([
+      {
+        id: 'arch-1',
+        name: 'Arch para borrar',
+        phone_number: '573001111111',
+        description: 'Desc',
+        user_id: 'user-1',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+    ]);
+    mockDeleteIVRArchitecture.mockResolvedValueOnce();
+
+    const user = userEvent.setup();
+    renderPage();
+
+    await screen.findByText('Arquitecturas IVR');
+    await user.click(screen.getByRole('button', { name: /listado/i }));
+
+    await user.click(screen.getByRole('button', { name: /abrir menú/i }));
+    await user.click(await screen.findByRole('menuitem', { name: /eliminar/i }));
+
+    expect(screen.getByText(/esta acción no se puede deshacer/i)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^eliminar$/i }));
+
+    await waitFor(() => {
+      expect(mockDeleteIVRArchitecture).toHaveBeenCalledWith('arch-1');
     });
   });
 });

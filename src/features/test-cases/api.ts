@@ -52,3 +52,12 @@ export async function listTestCases(
   );
   return response.data;
 }
+
+export async function deleteTestCase(
+  architectureId: string,
+  testCaseId: string
+): Promise<void> {
+  await httpClient.delete(
+    `/api/v1/ivr-architectures/${architectureId}/test-cases/${testCaseId}`
+  );
+}

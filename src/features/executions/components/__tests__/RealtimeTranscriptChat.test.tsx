@@ -9,7 +9,8 @@ function createState(
   accumulatedTranscript = steps
     .map((step) => step.current_transcription.trim())
     .filter(Boolean)
-    .join(' ')
+    .join(' '),
+  overrides: Partial<ExecutionProgressState> = {}
 ): ExecutionProgressState {
   return {
     execution_id: 'exec-1',
@@ -20,6 +21,7 @@ function createState(
     is_terminal: false,
     terminal_error_message: null,
     ws_connection_status: 'connected',
+    ...overrides,
   };
 }
 
@@ -28,7 +30,7 @@ describe('RealtimeTranscriptChat', () => {
     vi.useRealTimers();
   });
 
-  it('muestra estado vacío cuando aún no hay transcripción', () => {
+  it('muestra estado vacío cuando aún no hay transcripción y la ejecución sigue en curso', () => {
     const state = createState([
       {
         step_number: 1,
@@ -44,8 +46,56 @@ describe('RealtimeTranscriptChat', () => {
     render(<RealtimeTranscriptChat state={state} />);
 
     expect(screen.getByText('Transcripción en vivo')).toBeInTheDocument();
-    expect(screen.getByText('Sin actividad')).toBeInTheDocument();
+    expect(screen.getByText('Escuchando')).toBeInTheDocument();
     expect(screen.getByText('Aún no hay transcripción para mostrar.')).toBeInTheDocument();
+  });
+
+  it('muestra sin actividad cuando la ejecución ya terminó', () => {
+    const state = createState(
+      [
+        {
+          step_number: 1,
+          expected_text: 'Bienvenido',
+          status: 'passed',
+          current_transcription: 'bienvenido al sistema',
+          confidence: 97,
+          failure_reason: null,
+          is_finalized: true,
+        },
+      ],
+      'bienvenido al sistema',
+      {
+        global_status: 'passed',
+        is_terminal: true,
+      }
+    );
+
+    render(<RealtimeTranscriptChat state={state} />);
+
+    expect(screen.getByText('Sin actividad')).toBeInTheDocument();
+    expect(screen.queryByText('Escuchando')).not.toBeInTheDocument();
+  });
+
+  it('muestra escuchando cuando hay transcripción en ejecución aunque no haya step running', () => {
+    const state = createState(
+      [
+        {
+          step_number: 1,
+          expected_text: 'Bienvenido',
+          status: 'passed',
+          current_transcription: 'bienvenido al sistema',
+          confidence: 97,
+          failure_reason: null,
+          is_finalized: true,
+        },
+      ],
+      'bienvenido al sistema'
+    );
+
+    render(<RealtimeTranscriptChat state={state} />);
+
+    expect(screen.getByText('Escuchando')).toBeInTheDocument();
+    expect(screen.queryByText('Sin actividad')).not.toBeInTheDocument();
   });
 
   it('muestra de inmediato el nuevo evento y completa con typing continuo', () => {

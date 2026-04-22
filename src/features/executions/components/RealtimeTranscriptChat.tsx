@@ -16,7 +16,7 @@ export function RealtimeTranscriptChat({ state }: RealtimeTranscriptChatProps) {
   const [displayedText, setDisplayedText] = useState('');
 
   const transcriptText = useMemo(() => state.accumulated_transcript.trim(), [state.accumulated_transcript]);
-  const hasRunningStep = state.steps.some((step) => step.status === 'running');
+  const isListening = !state.is_terminal;
 
   const updateDisplayedText = useCallback((value: string) => {
     displayedTextRef.current = value;
@@ -118,12 +118,12 @@ export function RealtimeTranscriptChat({ state }: RealtimeTranscriptChatProps) {
         <p className="text-sm font-medium text-muted-foreground">Transcripción en vivo</p>
         <Badge
           className={
-            hasRunningStep
+            isListening
               ? 'bg-green-600 text-white'
               : 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
           }
         >
-          {hasRunningStep ? 'Escuchando' : 'Sin actividad'}
+          {isListening ? 'Escuchando' : 'Sin actividad'}
         </Badge>
       </div>
 
@@ -140,7 +140,7 @@ export function RealtimeTranscriptChat({ state }: RealtimeTranscriptChatProps) {
         {displayedText && (
           <p className="text-base text-foreground leading-relaxed wrap-break-word">
             {displayedText}
-            {hasRunningStep && <span className="ml-0.5 inline-block animate-pulse">|</span>}
+            {isListening && <span className="ml-0.5 inline-block animate-pulse">|</span>}
           </p>
         )}
       </div>

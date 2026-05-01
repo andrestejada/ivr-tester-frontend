@@ -35,13 +35,21 @@ export function MetricsPage() {
   
   // Format dates for display
   const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr + 'T00:00:00Z');
+    if (!dateStr) {
+      return '';
+    }
+
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
     return new Intl.DateTimeFormat('es-CO', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
     }).format(date);
   };
+
+  const [rangeStart, rangeEnd] =
+    dateFrom && dateTo && dateFrom > dateTo ? [dateTo, dateFrom] : [dateFrom, dateTo];
 
   // Fetch architectures
   const {
@@ -212,8 +220,8 @@ export function MetricsPage() {
         <div className="p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-md flex items-center gap-2">
           <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
           <p className="text-sm text-blue-900 dark:text-blue-100">
-            <span className="font-semibold">Rango de análisis:</span> {formatDate(dateFrom)} al{' '}
-            {formatDate(dateTo)}
+            <span className="font-semibold">Rango de análisis:</span> {formatDate(rangeStart)} al{' '}
+            {formatDate(rangeEnd)}
           </p>
         </div>
 

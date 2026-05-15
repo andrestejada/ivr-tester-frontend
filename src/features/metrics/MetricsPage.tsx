@@ -2,10 +2,13 @@
 
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
-import { AlertCircle, Calendar } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { AlertCircle, Calendar, FileDown, Loader2 } from 'lucide-react';
 import { useIVRArchitectures } from '@/features/ivr-architectures/hooks';
 import { useTestCases } from '@/features/test-cases/hooks';
+import { getErrorMessage } from '@/lib/helpers/getErrorMessage';
 import { useAnalytics } from './hooks';
+import { getAnalyticsReport } from './api';
 import { PieChartMetrics } from './components/PieChartMetrics';
 import { TrendChart } from './components/TrendChart';
 import { RankingsComparison } from './components/RankingsComparison';
@@ -32,6 +35,8 @@ export function MetricsPage() {
   const [selectedTestCaseId, setSelectedTestCaseId] = useState<string | null>(null);
   const [dateFrom, setDateFrom] = useState<string>(initialFrom);
   const [dateTo, setDateTo] = useState<string>(initialTo);
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+  const [reportError, setReportError] = useState<string | null>(null);
   
   // Format dates for display
   const formatDate = (dateStr: string) => {
@@ -88,6 +93,31 @@ export function MetricsPage() {
 
   // Check if analytics is loading
   const isLoadingData = isLoadingAnalytics;
+
+  const handleGenerateReport = async () => {
+    if (!selectedArchId || isGeneratingReport) {
+      return;
+    }
+
+    setIsGeneratingReport(true);
+    setReportError(null);
+
+    try {
+      const blob = await getAnalyticsReport(selectedArchId, {
+        test_case_id: selectedTestCaseId || undefined,
+        date_from: dateFrom || undefined,
+        date_to: dateTo || undefined,
+        include: ['summary', 'trend', 'rankings'],
+      });
+
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank');
+    } catch (error) {
+      setReportError(getErrorMessage(error));
+    } finally {
+      setIsGeneratingReport(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -224,6 +254,36 @@ export function MetricsPage() {
             {formatDate(rangeEnd)}
           </p>
         </div>
+
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            onClick={handleGenerateReport}
+            disabled={!selectedArchId || isGeneratingReport || isLoadingAnalytics}
+            className="gap-2"
+          >
+            {isGeneratingReport ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Generando reporte...
+              </>
+            ) : (
+              <>
+                <FileDown className="h-4 w-4" />
+                Generar reporte PDF
+              </>
+            )}
+          </Button>
+        </div>
+
+        {reportError && (
+          <Card className="p-4 border-red-200 bg-red-50 dark:bg-red-950 dark:border-red-800">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-800 dark:text-red-200">{reportError}</p>
+            </div>
+          </Card>
+        )}
 
         {/* Analytics Error */}
         {analyticsError && (

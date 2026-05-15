@@ -234,7 +234,13 @@ describe('MetricsPage Integration', () => {
 
     vi.mocked(testCasesHooks.useTestCases).mockReturnValue({
       testCases: [
-        { id: 'tc-1', name: 'Caso 1' },
+        {
+          id: 'tc-1',
+          ivr_architecture_id: '1',
+          name: 'Caso 1',
+          flow_script: [{ step: 1, listen: 'Bienvenido', action: 'send_dtmf_1' }],
+          created_at: '2026-01-01T10:00:00Z',
+        },
       ],
       error: null,
       errorMessage: '',

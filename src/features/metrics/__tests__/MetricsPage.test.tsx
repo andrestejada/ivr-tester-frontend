@@ -6,10 +6,14 @@ import { MetricsPage } from '../MetricsPage'
 import * as architecturesHooks from '@/features/ivr-architectures/hooks'
 import * as testCasesHooks from '@/features/test-cases/hooks'
 import * as metricsHooks from '../hooks'
+import * as metricsApi from '../api'
+import * as errorHelpers from '@/lib/helpers/getErrorMessage'
 
 vi.mock('@/features/ivr-architectures/hooks')
 vi.mock('@/features/test-cases/hooks')
 vi.mock('../hooks')
+vi.mock('../api')
+vi.mock('@/lib/helpers/getErrorMessage')
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,6 +34,11 @@ describe('MetricsPage Integration', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     queryClient.clear()
+    vi.stubGlobal('open', vi.fn())
+    vi.stubGlobal('URL', {
+      ...URL,
+      createObjectURL: vi.fn(() => 'blob:report-url'),
+    })
   })
 
   it('debería renderizar la página con título y filtros', () => {
@@ -208,5 +217,153 @@ describe('MetricsPage Integration', () => {
       expect(screen.getByText(/Fallidas/i)).toBeInTheDocument()
       expect(screen.getByText(/Errores/i)).toBeInTheDocument()
     })
+  })
+
+  it('debería generar el reporte PDF con los filtros actuales', async () => {
+    const mockBlob = new Blob(['pdf-bytes'], { type: 'application/pdf' })
+
+    vi.mocked(architecturesHooks.useIVRArchitectures).mockReturnValue({
+      architectures: [
+        { id: '1', name: 'Arch 1', phone_number: '573001111111', user_id: 'user-1', created_at: '', updated_at: '' },
+      ],
+      error: null,
+      errorMessage: '',
+      isError: false,
+      isLoading: false,
+    })
+
+    vi.mocked(testCasesHooks.useTestCases).mockReturnValue({
+      testCases: [
+        { id: 'tc-1', name: 'Caso 1' },
+      ],
+      error: null,
+      errorMessage: '',
+      isError: false,
+      isLoading: false,
+    })
+
+    vi.mocked(metricsHooks.useAnalytics).mockReturnValue({
+      analytics: {
+        selected_context: {
+          architecture_id: '1',
+          architecture_name: 'Arch 1',
+          test_case_id: null,
+          test_case_name: null,
+          date_from: '2026-03-23',
+          date_to: '2026-03-30',
+        },
+        summary: null,
+        trend: null,
+        rankings: null,
+      },
+      error: null,
+      errorMessage: '',
+      isError: false,
+      isLoading: false,
+      refetch: vi.fn(),
+    })
+
+    vi.mocked(metricsApi.getAnalyticsReport).mockResolvedValueOnce(mockBlob)
+
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.selectOptions(screen.getByLabelText(/Arquitectura IVR/i), '1')
+    await user.click(screen.getByRole('button', { name: /Generar reporte PDF/i }))
+
+    await waitFor(() => {
+      expect(metricsApi.getAnalyticsReport).toHaveBeenCalledWith('1', {
+        test_case_id: undefined,
+        date_from: expect.any(String),
+        date_to: expect.any(String),
+        include: ['summary', 'trend', 'rankings'],
+      })
+    })
+
+    expect(URL.createObjectURL).toHaveBeenCalledWith(mockBlob)
+    expect(window.open).toHaveBeenCalledWith('blob:report-url', '_blank')
+  })
+
+  it('debería mostrar error cuando falla la generación del reporte', async () => {
+    vi.mocked(architecturesHooks.useIVRArchitectures).mockReturnValue({
+      architectures: [
+        { id: '1', name: 'Arch 1', phone_number: '573001111111', user_id: 'user-1', created_at: '', updated_at: '' },
+      ],
+      error: null,
+      errorMessage: '',
+      isError: false,
+      isLoading: false,
+    })
+
+    vi.mocked(testCasesHooks.useTestCases).mockReturnValue({
+      testCases: [],
+      error: null,
+      errorMessage: '',
+      isError: false,
+      isLoading: false,
+    })
+
+    vi.mocked(metricsHooks.useAnalytics).mockReturnValue({
+      analytics: undefined,
+      error: null,
+      errorMessage: '',
+      isError: false,
+      isLoading: false,
+      refetch: vi.fn(),
+    })
+
+    vi.mocked(metricsApi.getAnalyticsReport).mockRejectedValueOnce(new Error('boom'))
+    vi.mocked(errorHelpers.getErrorMessage).mockReturnValueOnce('Reporte falló')
+
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.selectOptions(screen.getByLabelText(/Arquitectura IVR/i), '1')
+    await user.click(screen.getByRole('button', { name: /Generar reporte PDF/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText('Reporte falló')).toBeInTheDocument()
+    })
+
+    expect(window.open).not.toHaveBeenCalled()
+  })
+
+  it('debería mostrar rango vacío cuando no hay fechas', async () => {
+    vi.mocked(architecturesHooks.useIVRArchitectures).mockReturnValue({
+      architectures: [
+        { id: '1', name: 'Arch 1', phone_number: '573001111111', user_id: 'user-1', created_at: '', updated_at: '' },
+      ],
+      error: null,
+      errorMessage: '',
+      isError: false,
+      isLoading: false,
+    })
+
+    vi.mocked(testCasesHooks.useTestCases).mockReturnValue({
+      testCases: [],
+      error: null,
+      errorMessage: '',
+      isError: false,
+      isLoading: false,
+    })
+
+    vi.mocked(metricsHooks.useAnalytics).mockReturnValue({
+      analytics: undefined,
+      error: null,
+      errorMessage: '',
+      isError: false,
+      isLoading: false,
+      refetch: vi.fn(),
+    })
+
+    const user = userEvent.setup()
+    renderPage()
+
+    const archSelect = screen.getByLabelText(/Arquitectura IVR/i)
+    await user.selectOptions(archSelect, '1')
+    await user.clear(screen.getByLabelText(/Desde/i))
+    await user.clear(screen.getByLabelText(/Hasta/i))
+
+    expect(screen.getByText(/Rango de análisis:/i)).toBeInTheDocument()
   })
 })

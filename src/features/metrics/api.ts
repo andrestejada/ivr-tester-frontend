@@ -46,3 +46,40 @@ export async function getAnalytics(
   const response = await httpClient.get<AnalyticsResponse>(url)
   return response.data
 }
+
+export async function getAnalyticsReport(
+  architectureId: string,
+  params: AnalyticsQueryParams = {}
+): Promise<Blob> {
+  const queryParams = new URLSearchParams()
+
+  if (params.test_case_id) {
+    queryParams.append('test_case_id', params.test_case_id)
+  }
+
+  if (params.date_from) {
+    queryParams.append('date_from', params.date_from)
+  }
+
+  if (params.date_to) {
+    queryParams.append('date_to', params.date_to)
+  }
+
+  if (params.top_n) {
+    queryParams.append('top_n', params.top_n.toString())
+  }
+
+  if (params.include && params.include.length > 0) {
+    queryParams.append('include', params.include.join(','))
+  } else {
+    queryParams.append('include', 'summary,trend,rankings')
+  }
+
+  const queryString = queryParams.toString()
+  const url = `/api/v1/ivr-architectures/${architectureId}/test-cases/analytics/report${
+    queryString ? `?${queryString}` : ''
+  }`
+
+  const response = await httpClient.get(url, { responseType: 'blob' })
+  return response.data
+}
